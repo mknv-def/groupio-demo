@@ -1,0 +1,435 @@
+<template>
+    <lightning-card title="Create Group Buy Proposal" icon-name="standard:opportunity">
+        <div class="slds-p-around_medium">
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </template>
+
+            <!-- Success Message -->
+            <template if:true={showSuccess}>
+                <div class="slds-notify slds-notify_toast slds-theme_success slds-m-bottom_medium">
+                    <div class="slds-notify__content">
+                        <h2 class="slds-text-heading_small">
+                            <lightning-icon icon-name="utility:success" size="small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                            Group Buy Proposal created successfully!
+                        </h2>
+                    </div>
+                    <lightning-button-icon 
+                        icon-name="utility:close" 
+                        variant="bare-inverse" 
+                        onclick={handleCloseSuccess}
+                        class="slds-notify__close">
+                    </lightning-button-icon>
+                </div>
+            </template>
+
+            <lightning-tabset>
+                <!-- Proposal Details Tab -->
+                <lightning-tab label="Proposal Details" value="proposal">
+                    <div class="slds-p-around_small">
+                        <lightning-layout multiple-rows>
+                            <!-- Proposal Name -->
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                    type="text"
+                                    label="Proposal Name"
+                                    name="Name"
+                                    value={proposal.Name}
+                                    onchange={handleProposalChange}
+                                    required>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <!-- Status -->
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-combobox
+                                    name="Status__c"
+                                    label="Status"
+                                    value={proposal.Status__c}
+                                    options={statusOptions}
+                                    onchange={handleProposalChange}>
+                                </lightning-combobox>
+                            </lightning-layout-item>
+
+                            <!-- Type -->
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-combobox
+                                    name="Type__c"
+                                    label="Type"
+                                    value={proposal.Type__c}
+                                    options={typeOptions}
+                                    onchange={handleProposalChange}>
+                                </lightning-combobox>
+                            </lightning-layout-item>
+
+                            <!-- Min Quota -->
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                    type="number"
+                                    label="Min Quota"
+                                    name="Min_Quota__c"
+                                    value={proposal.Min_Quota__c}
+                                    onchange={handleProposalChange}
+                                    min="0">
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <!-- Max Quota -->
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                    type="number"
+                                    label="Max Quota"
+                                    name="Max_Quota__c"
+                                    value={proposal.Max_Quota__c}
+                                    onchange={handleProposalChange}
+                                    min="0">
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <!-- Start Date -->
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                    type="datetime"
+                                    label="Start Date"
+                                    name="Start_Date__c"
+                                    value={proposal.Start_Date__c}
+                                    onchange={handleProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <!-- End Date -->
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                    type="datetime"
+                                    label="End Date"
+                                    name="End_Date__c"
+                                    value={proposal.End_Date__c}
+                                    onchange={handleProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <!-- Approximate Deliver Start Date -->
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                    type="date"
+                                    label="Approximate Delivery Start Date"
+                                    name="Approximate_Deliver_Start_Date__c"
+                                    value={proposal.Approximate_Deliver_Start_Date__c}
+                                    onchange={handleProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <!-- Description -->
+                            <lightning-layout-item size="12" padding="around-small">
+                                <lightning-textarea
+                                    name="Description__c"
+                                    label="Description"
+                                    value={proposal.Description__c}
+                                    onchange={handleProposalChange}
+                                    max-length="1500">
+                                </lightning-textarea>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </div>
+                </lightning-tab>
+
+                <!-- Product Selection Tab -->
+                <lightning-tab label="Product" value="product">
+                    <div class="slds-p-around_small">
+                        <!-- Product Selection Mode Toggle -->
+                        <div class="slds-m-bottom_medium">
+                            <lightning-button-group>
+                                <lightning-button
+                                    label="Search Existing Product"
+                                    variant={searchButtonVariant}
+                                    onclick={handleSearchMode}>
+                                </lightning-button>
+                                <lightning-button
+                                    label="Create New Product"
+                                    variant={createButtonVariant}
+                                    onclick={handleCreateMode}>
+                                </lightning-button>
+                            </lightning-button-group>
+                        </div>
+
+                        <!-- Search Existing Product Section -->
+                        <template if:true={isSearchMode}>
+                            <div class="product-search-section">
+                                <!-- Search Input -->
+                                <div class="slds-m-bottom_medium">
+                                    <lightning-input
+                                        type="search"
+                                        label="Search Products"
+                                        placeholder="Enter product name or code..."
+                                        value={searchTerm}
+                                        onchange={handleSearchTermChange}>
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Search Results -->
+                                <template if:true={showSearchResults}>
+                                    <div class="search-results slds-box slds-box_x-small">
+                                        <template if:true={hasSearchResults}>
+                                            <ul class="slds-listbox slds-listbox_vertical">
+                                                <template for:each={searchResults} for:item="product">
+                                                    <li key={product.Id} 
+                                                        class="slds-listbox__item search-result-item"
+                                                        onclick={handleProductSelect}
+                                                        data-id={product.Id}>
+                                                        <div class="slds-media slds-media_center slds-p-around_x-small">
+                                                            <div class="slds-media__figure">
+                                                                <lightning-icon icon-name="standard:product" size="small"></lightning-icon>
+                                                            </div>
+                                                            <div class="slds-media__body">
+                                                                <div class="slds-text-title_bold">{product.Name}</div>
+                                                                <div class="slds-text-body_small slds-text-color_weak">
+                                                                    {product.ProductCode} 
+                                                                    <template if:true={product.Brand__c}>
+                                                                        | {product.Brand__c}
+                                                                    </template>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template if:false={hasSearchResults}>
+                                            <div class="slds-p-around_small slds-text-align_center slds-text-color_weak">
+                                                No products found. Try a different search term or create a new product.
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Selected Product Display -->
+                                <template if:true={selectedProduct}>
+                                    <div class="selected-product slds-m-top_medium">
+                                        <lightning-card title="Selected Product">
+                                            <div class="slds-p-around_small">
+                                                <lightning-layout>
+                                                    <lightning-layout-item flexibility="grow">
+                                                        <p><strong>Name:</strong> {selectedProduct.Name}</p>
+                                                        <p><strong>Code:</strong> {selectedProduct.ProductCode}</p>
+                                                        <template if:true={selectedProduct.Brand__c}>
+                                                            <p><strong>Brand:</strong> {selectedProduct.Brand__c}</p>
+                                                        </template>
+                                                        <template if:true={selectedProduct.Character__c}>
+                                                            <p><strong>Character:</strong> {selectedProduct.Character__c}</p>
+                                                        </template>
+                                                    </lightning-layout-item>
+                                                    <lightning-layout-item>
+                                                        <lightning-button-icon
+                                                            icon-name="utility:close"
+                                                            alternative-text="Remove"
+                                                            onclick={handleRemoveProduct}>
+                                                        </lightning-button-icon>
+                                                    </lightning-layout-item>
+                                                </lightning-layout>
+                                            </div>
+                                        </lightning-card>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Create New Product Section -->
+                        <template if:true={isCreateMode}>
+                            <div class="product-create-section">
+                                <lightning-layout multiple-rows>
+                                    <!-- Product Name -->
+                                    <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                        <lightning-input
+                                            type="text"
+                                            label="Product Name"
+                                            name="Name"
+                                            value={newProduct.Name}
+                                            onchange={handleNewProductChange}
+                                            required>
+                                        </lightning-input>
+                                    </lightning-layout-item>
+
+                                    <!-- Product Code -->
+                                    <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                        <lightning-input
+                                            type="text"
+                                            label="Product Code"
+                                            name="ProductCode"
+                                            value={newProduct.ProductCode}
+                                            onchange={handleNewProductChange}>
+                                        </lightning-input>
+                                    </lightning-layout-item>
+
+                                    <!-- Brand -->
+                                    <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                        <lightning-combobox
+                                            name="Brand__c"
+                                            label="Brand"
+                                            value={newProduct.Brand__c}
+                                            options={brandOptions}
+                                            onchange={handleNewProductChange}>
+                                        </lightning-combobox>
+                                    </lightning-layout-item>
+
+                                    <!-- Character -->
+                                    <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                        <lightning-combobox
+                                            name="Character__c"
+                                            label="Character"
+                                            value={newProduct.Character__c}
+                                            options={characterOptions}
+                                            onchange={handleNewProductChange}>
+                                        </lightning-combobox>
+                                    </lightning-layout-item>
+
+                                    <!-- Is Active -->
+                                    <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                        <lightning-input
+                                            type="checkbox"
+                                            label="Active"
+                                            name="IsActive"
+                                            checked={newProduct.IsActive}
+                                            onchange={handleNewProductCheckbox}>
+                                        </lightning-input>
+                                    </lightning-layout-item>
+
+                                    <!-- Product Description -->
+                                    <lightning-layout-item size="12" padding="around-small">
+                                        <lightning-textarea
+                                            name="Description"
+                                            label="Product Description"
+                                            value={newProduct.Description}
+                                            onchange={handleNewProductChange}>
+                                        </lightning-textarea>
+                                    </lightning-layout-item>
+
+                                    <!-- Create Product Button -->
+                                    <lightning-layout-item size="12" padding="around-small">
+                                        <lightning-button
+                                            label="Create Product"
+                                            variant="brand"
+                                            onclick={handleCreateProduct}
+                                            disabled={isCreateProductDisabled}>
+                                        </lightning-button>
+                                    </lightning-layout-item>
+                                </lightning-layout>
+
+                                <!-- Newly Created Product Display -->
+                                <template if:true={selectedProduct}>
+                                    <div class="selected-product slds-m-top_medium">
+                                        <div class="slds-notify slds-notify_toast slds-theme_success slds-m-bottom_small">
+                                            <div class="slds-notify__content">
+                                                <h2 class="slds-text-heading_small">Product created and linked to proposal!</h2>
+                                            </div>
+                                        </div>
+                                        <lightning-card title="Created Product">
+                                            <div class="slds-p-around_small">
+                                                <p><strong>Name:</strong> {selectedProduct.Name}</p>
+                                                <p><strong>Code:</strong> {selectedProduct.ProductCode}</p>
+                                                <template if:true={selectedProduct.Brand__c}>
+                                                    <p><strong>Brand:</strong> {selectedProduct.Brand__c}</p>
+                                                </template>
+                                            </div>
+                                        </lightning-card>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </lightning-tab>
+
+                <!-- Account Selection Tab -->
+                <lightning-tab label="Account" value="account">
+                    <div class="slds-p-around_small">
+                        <!-- Account Search -->
+                        <div class="slds-m-bottom_medium">
+                            <lightning-input
+                                type="search"
+                                label="Search Accounts"
+                                placeholder="Enter account name..."
+                                value={accountSearchTerm}
+                                onchange={handleAccountSearchChange}>
+                            </lightning-input>
+                        </div>
+
+                        <!-- Account Search Results -->
+                        <template if:true={showAccountResults}>
+                            <div class="search-results slds-box slds-box_x-small">
+                                <template if:true={hasAccountResults}>
+                                    <ul class="slds-listbox slds-listbox_vertical">
+                                        <template for:each={accountResults} for:item="account">
+                                            <li key={account.Id} 
+                                                class="slds-listbox__item search-result-item"
+                                                onclick={handleAccountSelect}
+                                                data-id={account.Id}>
+                                                <div class="slds-media slds-media_center slds-p-around_x-small">
+                                                    <div class="slds-media__figure">
+                                                        <lightning-icon icon-name="standard:account" size="small"></lightning-icon>
+                                                    </div>
+                                                    <div class="slds-media__body">
+                                                        <div class="slds-text-title_bold">{account.Name}</div>
+                                                        <template if:true={account.AccountNumber}>
+                                                            <div class="slds-text-body_small slds-text-color_weak">
+                                                                {account.AccountNumber}
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                                <template if:false={hasAccountResults}>
+                                    <div class="slds-p-around_small slds-text-align_center slds-text-color_weak">
+                                        No accounts found.
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Selected Account Display -->
+                        <template if:true={selectedAccount}>
+                            <div class="selected-account slds-m-top_medium">
+                                <lightning-card title="Selected Account">
+                                    <div class="slds-p-around_small">
+                                        <lightning-layout>
+                                            <lightning-layout-item flexibility="grow">
+                                                <p><strong>Name:</strong> {selectedAccount.Name}</p>
+                                                <template if:true={selectedAccount.AccountNumber}>
+                                                    <p><strong>Account Number:</strong> {selectedAccount.AccountNumber}</p>
+                                                </template>
+                                            </lightning-layout-item>
+                                            <lightning-layout-item>
+                                                <lightning-button-icon
+                                                    icon-name="utility:close"
+                                                    alternative-text="Remove"
+                                                    onclick={handleRemoveAccount}>
+                                                </lightning-button-icon>
+                                            </lightning-layout-item>
+                                        </lightning-layout>
+                                    </div>
+                                </lightning-card>
+                            </div>
+                        </template>
+                    </div>
+                </lightning-tab>
+            </lightning-tabset>
+
+            <!-- Action Buttons -->
+            <div class="slds-m-top_large slds-text-align_center">
+                <lightning-button
+                    label="Cancel"
+                    onclick={handleCancel}
+                    class="slds-m-right_small">
+                </lightning-button>
+                <lightning-button
+                    label="Create Proposal"
+                    variant="brand"
+                    onclick={handleCreateProposal}
+                    disabled={isCreateProposalDisabled}>
+                </lightning-button>
+            </div>
+        </div>
+    </lightning-card>
+</template>

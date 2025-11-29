@@ -1,0 +1,172 @@
+/* Group Buy Proposal Creator Styles */
+
+/* Search Results Styling */
+.search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+}
+
+.search-result-item {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+    background-color: #f3f2f2;
+}
+
+.search-result-item:not(:last-child) {
+    border-bottom: 1px solid #dddbda;
+}
+
+/* Selected Item Cards */
+.selected-product,
+.selected-account {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Product/Account Search Section */
+.product-search-section,
+.product-create-section {
+    min-height: 200px;
+}
+
+/* Success Notification */
+.slds-notify_toast {
+    position: relative;
+    padding: 0.75rem 2rem 0.75rem 1rem;
+    border-radius: 4px;
+}
+
+.slds-notify__close {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Tab Content Padding */
+lightning-tab {
+    padding: 0;
+}
+
+/* Button Group Styling */
+lightning-button-group {
+    display: flex;
+    justify-content: flex-start;
+}
+
+/* Form Layout Improvements */
+lightning-layout-item {
+    margin-bottom: 0.5rem;
+}
+
+/* Card Improvements */
+lightning-card {
+    margin-top: 1rem;
+}
+
+/* Loading State */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .search-results {
+        max-height: 200px;
+    }
+    
+    lightning-button-group {
+        flex-direction: column;
+    }
+    
+    lightning-button-group lightning-button {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Combobox Dropdown Styling */
+lightning-combobox {
+    width: 100%;
+}
+
+/* Input Field Styling */
+lightning-input,
+lightning-textarea,
+lightning-combobox {
+    margin-bottom: 0.25rem;
+}
+
+/* Action Buttons Section */
+.slds-text-align_center {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dddbda;
+}
+
+/* Listbox Items */
+.slds-listbox__item {
+    list-style: none;
+}
+
+/* Media Object in Search Results */
+.slds-media_center {
+    align-items: center;
+}
+
+/* Text Utilities */
+.slds-text-title_bold {
+    font-weight: 600;
+    color: #080707;
+}
+
+.slds-text-body_small {
+    font-size: 0.75rem;
+}
+
+/* Box Styling */
+.slds-box_x-small {
+    padding: 0;
+}
+
+/* Icon Styling in Results */
+.slds-media__figure {
+    margin-right: 0.75rem;
+}
+
+/* Scrollbar Styling for Search Results */
+.search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
