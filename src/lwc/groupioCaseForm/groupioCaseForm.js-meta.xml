@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>64.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightningCommunity__Default, lightning__AppPage">
+            <property
+                    name="predefinedReason"
+                    type="String"
+                    label="Predefined Case Reason"
+                    description="Set the fixed Case.Reason field value for this component placement (e.g., 'Merchandiser Application')."
+                    default="General Inquiry"
+            />
+            <property
+                    name="cardTitle"
+                    type="String"
+                    label="Card Title"
+                    default="New Service Request for Groupio"
+            />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

@@ -1,0 +1,90 @@
+<template>
+    <lightning-card title={cardTitle} icon-name="standard:case">
+        <div class="slds-p-around_medium">
+            <template if:true={isSubmitted}>
+                <div class="slds-notify slds-notify_alert slds-theme_success slds-m-bottom_medium" role="alert">
+                    <span class="slds-icon_container slds-icon-utility-check slds-m-right_x-small">
+                        <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                    </span>
+                    <h2>Your Business Group Application Has Been Submitted!</h2>
+                    <p>Your Case Number: <strong><a onclick={navigateToCaseRecord} data-id={recordId}>{recordId}</a></strong>. We will review your business information shortly.</p>
+                </div>
+            </template>
+
+            <template if:false={isSubmitted}>
+                <lightning-record-edit-form
+                        object-api-name="Case"
+                        onsubmit={handleSubmit}
+                        onsuccess={handleSuccess}
+                        onerror={handleError}>
+
+                    <lightning-input-field field-name="Reason" value={predefinedReason} class="slds-hide"></lightning-input-field>
+                    <lightning-input-field field-name="Status" value="New" class="slds-hide"></lightning-input-field>
+
+                    <h3 class="slds-section-title--divider slds-m-top_medium">1. Contact Person Details</h3>
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input-field field-name="SuppliedName" label="Your Full Name" required></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input-field field-name="SuppliedEmail" label="Business Email" required></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input-field field-name="SuppliedPhone" label="Contact Phone"></lightning-input-field>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input-field field-name="Priority"></lightning-input-field>
+                        </div>
+                    </div>
+
+                    <h3 class="slds-section-title--divider slds-m-top_medium">2. Business Account Details</h3>
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input-field field-name="Subject" label="Company Name" required></lightning-input-field>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input-field field-name="Order__c" label="Tax ID / Registration Number (e.g., SSN/ITIN)"></lightning-input-field>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input-field field-name="WebCompany__c" label="Company Website (Optional)"></lightning-input-field>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input-field field-name="Type" required></lightning-input-field>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-input-field field-name="Description" label="Reason for Wholesale Access (Describe your business)"></lightning-input-field>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-hide">
+                            <lightning-input-field field-name="Order__c"></lightning-input-field>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-hide">
+                            <lightning-input-field field-name="Group_Buy_Proposal__c"></lightning-input-field>
+                        </div>
+                    </div>
+
+                    <div class="slds-m-top_large">
+                        <lightning-button
+                                variant="brand"
+                                type="submit"
+                                label="Submit Application"
+                                disabled={isSending}>
+                        </lightning-button>
+                        <template if:true={isSending}>
+                            <lightning-spinner alternative-text="Submitting" size="small" class="slds-m-left_small"></lightning-spinner>
+                        </template>
+                    </div>
+
+                </lightning-record-edit-form>
+            </template>
+        </div>
+    </lightning-card>
+</template>
