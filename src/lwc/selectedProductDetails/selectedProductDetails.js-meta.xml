@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>64.0</apiVersion>
+    <description>Selected Product Details</description>
+    <isExposed>true</isExposed>
+    <masterLabel>Selected Product Details</masterLabel>
+    <targets>
+        <target>lightning__RecordPage</target>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage, lightningCommunity__Default">
+            <property
+                    name="recordId"
+                    type="String"
+                    label="Product Record Id"
+                    description="Automatically binds the current page's record id to the component."
+                    default="{!recordId}"
+            />
+            <property
+                    name="effectiveAccountId"
+                    type="String"
+                    label="Effective Account Id (B2B Context)"
+                    description="The ID of the account under which the user is acting."
+                    default="{!CurrentUser.effectiveAccountId}"
+            />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

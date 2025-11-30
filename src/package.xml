@@ -116,6 +116,8 @@
         <members>WebStoreSearchProdSettings</members>
         <members>Group_Buy_Proposal__c</members>
         <members>Product_Category_Condition__c</members>
+        <members>Conditional_Order__c</members>
+        <members>Group_Proposal_Discount__c</members>
         <name>CustomObject</name>
     </types>
     <types>

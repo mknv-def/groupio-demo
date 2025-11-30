@@ -1,8 +1,7 @@
-import { LightningElement, track, wire } from 'lwc';
+import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import { getSessionContext } from 'commerce/contextApi';
-
 
 // Apex methods
 import searchProducts from '@salesforce/apex/GroupBuyProposalController.searchProducts';
@@ -10,16 +9,27 @@ import createProduct from '@salesforce/apex/GroupBuyProposalController.createPro
 import createGroupBuyProposal from '@salesforce/apex/GroupBuyProposalController.createGroupBuyProposal';
 import getProposalPicklistValues from '@salesforce/apex/GroupBuyProposalController.getProposalPicklistValues';
 import getProductPicklistValues from '@salesforce/apex/GroupBuyProposalController.getProductPicklistValues';
-import searchAccounts from '@salesforce/apex/GroupBuyProposalController.searchAccounts';
+import getAccountById from '@salesforce/apex/GroupBuyProposalController.getAccountById';
 
 export default class GroupBuyProposalCreator extends NavigationMixin(LightningElement) {
     // Loading and UI state
     @track isLoading = false;
     @track showSuccess = false;
-    
+    @track activeTab = 'proposal';
+
+    // Validation
+    @track showValidationMessage = false;
+    @track validationMessage = '';
+
     // Product selection mode
     @track productMode = 'search'; // 'search' or 'create'
-    
+
+    // User and Account context
+    userId = null;
+    @track accountId = null;
+    @track accountName = '';
+    @track accountNumber = '';
+
     // Proposal data
     @track proposal = {
         Name: '',
@@ -34,13 +44,13 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
         Product__c: null,
         Account__c: null
     };
-    
+
     // Product search
     @track searchTerm = '';
     @track searchResults = [];
     @track selectedProduct = null;
     searchTimeout;
-    
+
     // New product data
     @track newProduct = {
         Name: '',
@@ -51,20 +61,15 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
         Character__c: '',
         Family: ''
     };
-    
-    // Account search
-    @track accountSearchTerm = '';
-    @track accountResults = [];
-    @track selectedAccount = null;
-    accountSearchTimeout;
-    
+
     // Picklist options
     @track statusOptions = [];
     @track typeOptions = [];
     @track brandOptions = [];
     @track characterOptions = [];
-    
-    // Created proposal reference
+
+    // Created proposal data
+    @track createdProposal = null;
     createdProposalId = null;
 
     // ===============================
@@ -76,17 +81,38 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
         try {
             const sessionContext = await getSessionContext();
             this.userId = sessionContext.userId;
+            this.accountId = sessionContext.effectiveAccountId;
             this.proposal.Account__c = sessionContext.effectiveAccountId;
+
+            // Load account details for display
+            if (this.accountId) {
+                await this.loadAccountDetails();
+            }
+
             console.log('User ID:', this.userId);
-            console.log('Effective Account ID:', sessionContext.effectiveAccountId);
+            console.log('Effective Account ID:', this.accountId);
         } catch (error) {
             console.error('Error fetching session context:', error);
         }
     }
+
     // ===============================
-    // WIRE METHODS
+    // DATA LOADING METHODS
     // ===============================
-    
+
+    async loadAccountDetails() {
+        try {
+            const account = await getAccountById({ accountId: this.accountId });
+            if (account) {
+                this.accountName = account.Name;
+                this.accountNumber = account.AccountNumber || '';
+            }
+        } catch (error) {
+            console.error('Error loading account details:', error);
+            this.accountName = 'Your Account';
+        }
+    }
+
     async loadPicklistValues() {
         try {
             // Load proposal picklist values
@@ -103,7 +129,7 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
                     value: item.value
                 }));
             }
-            
+
             // Load product picklist values
             const productPicklists = await getProductPicklistValues();
             if (productPicklists.Brand__c) {
@@ -132,135 +158,230 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
     // ===============================
     // GETTERS
     // ===============================
-    
+
     get isSearchMode() {
         return this.productMode === 'search';
     }
-    
+
     get isCreateMode() {
         return this.productMode === 'create';
     }
-    
+
     get searchButtonVariant() {
         return this.productMode === 'search' ? 'brand' : 'neutral';
     }
-    
+
     get createButtonVariant() {
         return this.productMode === 'create' ? 'brand' : 'neutral';
     }
-    
+
     get showSearchResults() {
         return this.searchTerm.length >= 2 && !this.selectedProduct;
     }
-    
+
     get hasSearchResults() {
         return this.searchResults && this.searchResults.length > 0;
     }
-    
-    get showAccountResults() {
-        return this.accountSearchTerm.length >= 2 && !this.selectedAccount;
-    }
-    
-    get hasAccountResults() {
-        return this.accountResults && this.accountResults.length > 0;
-    }
-    
+
     get isCreateProductDisabled() {
         return !this.newProduct.Name || this.newProduct.Name.trim() === '';
     }
-    
+
     get isCreateProposalDisabled() {
-        return !this.proposal.Name || this.proposal.Name.trim() === '';
+        // Disabled if no name OR no product selected
+        return !this.proposal.Name || this.proposal.Name.trim() === '' || !this.selectedProduct;
+    }
+
+    get hasAccountId() {
+        return this.accountId != null;
+    }
+
+    get accountDisplayName() {
+        if (this.accountName && this.accountNumber) {
+            return `${this.accountName} (${this.accountNumber})`;
+        }
+        return this.accountName || 'Loading...';
+    }
+
+    get productTabLabel() {
+        if (this.selectedProduct) {
+            return `Product ✓`;
+        }
+        return 'Product *';
+    }
+
+    get createdProposalProductName() {
+        return this.createdProposal?.Product__r?.Name || this.selectedProduct?.Name || 'N/A';
+    }
+
+    get formattedStartDate() {
+        if (this.createdProposal?.Start_Date__c) {
+            return new Date(this.createdProposal.Start_Date__c).toLocaleString();
+        }
+        return 'N/A';
+    }
+
+    get formattedEndDate() {
+        if (this.createdProposal?.End_Date__c) {
+            return new Date(this.createdProposal.End_Date__c).toLocaleString();
+        }
+        return 'N/A';
     }
 
     // ===============================
     // PROPOSAL HANDLERS
     // ===============================
-    
+
     handleProposalChange(event) {
         const field = event.target.name;
         this.proposal = {
             ...this.proposal,
             [field]: event.target.value
         };
+        // Clear validation message when user makes changes
+        this.showValidationMessage = false;
     }
-    
+
+    validateForm() {
+        // Check all required fields
+        const requiredFields = [
+            { field: 'Name', label: 'Proposal Name' },
+            { field: 'Status__c', label: 'Status' },
+            { field: 'Type__c', label: 'Type' },
+            { field: 'Min_Quota__c', label: 'Min Quota' },
+            { field: 'Max_Quota__c', label: 'Max Quota' },
+            { field: 'Start_Date__c', label: 'Start Date' },
+            { field: 'End_Date__c', label: 'End Date' },
+            { field: 'Approximate_Deliver_Start_Date__c', label: 'Delivery Start Date' },
+            { field: 'Description__c', label: 'Description' }
+        ];
+
+        const missingFields = [];
+
+        for (const { field, label } of requiredFields) {
+            const value = this.proposal[field];
+            if (value === null || value === undefined || value === '' ||
+                (typeof value === 'string' && value.trim() === '')) {
+                missingFields.push(label);
+            }
+        }
+
+        // Check product selection
+        if (!this.selectedProduct) {
+            missingFields.push('Product (select or create a product)');
+        }
+
+        // Check Min/Max quota logic
+        if (this.proposal.Min_Quota__c && this.proposal.Max_Quota__c) {
+            if (Number(this.proposal.Min_Quota__c) > Number(this.proposal.Max_Quota__c)) {
+                this.validationMessage = 'Min Quota cannot be greater than Max Quota';
+                this.showValidationMessage = true;
+                return false;
+            }
+        }
+
+        // Check dates
+        if (this.proposal.Start_Date__c && this.proposal.End_Date__c) {
+            const startDate = new Date(this.proposal.Start_Date__c);
+            const endDate = new Date(this.proposal.End_Date__c);
+            if (startDate >= endDate) {
+                this.validationMessage = 'End Date must be after Start Date';
+                this.showValidationMessage = true;
+                return false;
+            }
+        }
+
+        if (missingFields.length > 0) {
+            this.validationMessage = `Please fill in all required fields: ${missingFields.join(', ')}`;
+            this.showValidationMessage = true;
+            return false;
+        }
+
+        // Run standard Lightning input validation
+        const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox, lightning-textarea')]
+            .reduce((validSoFar, inputField) => {
+                inputField.reportValidity();
+                return validSoFar && inputField.checkValidity();
+            }, true);
+
+        return allValid;
+    }
+
     async handleCreateProposal() {
-        // Validate required fields
-        if (!this.proposal.Name || this.proposal.Name.trim() === '') {
-            this.showToast('Error', 'Please enter a proposal name', 'error');
+        console.log( 'Creating proposal with data:', this.proposal, 'and selected product:', this.selectedProduct );
+        // Validate form
+        if (!this.validateForm()) {
+            this.showToast('Validation Error', 'Please fill in all required fields', 'error');
             return;
         }
-        
+
         this.isLoading = true;
-        
+        this.showValidationMessage = false;
+
         try {
             // Prepare proposal data
             const proposalData = {
                 ...this.proposal,
-                Product__c: this.selectedProduct ? this.selectedProduct.Id : null,
-                Account__c: this.selectedAccount ? this.selectedAccount.Id : null
+                Product__c: this.selectedProduct.Id,
+                Account__c: this.accountId
             };
-            
+console.log( 'Submitting proposal data:', proposalData );
             const result = await createGroupBuyProposal({
                 proposalData: JSON.stringify(proposalData)
             });
-            
+
             this.createdProposalId = result.Id;
+            this.createdProposal = result;
             this.showSuccess = true;
-            
+console.log( 'Proposal created successfully:', result );
             this.showToast('Success', 'Group Buy Proposal created successfully!', 'success');
-            
-            // Reset form after short delay
-            setTimeout(() => {
-                this.resetForm();
-            }, 2000);
-            
+
         } catch (error) {
             this.showToast('Error', 'Failed to create proposal: ' + this.reduceErrors(error), 'error');
         } finally {
             this.isLoading = false;
         }
     }
-    
+
     handleCancel() {
         this.resetForm();
-        
+
         // Dispatch cancel event for parent components
         this.dispatchEvent(new CustomEvent('cancel'));
     }
-    
-    handleCloseSuccess() {
+
+    handleCreateAnother() {
+        this.resetForm();
         this.showSuccess = false;
+        this.createdProposal = null;
+        this.createdProposalId = null;
     }
 
     // ===============================
     // PRODUCT MODE HANDLERS
     // ===============================
-    
+
     handleSearchMode() {
         this.productMode = 'search';
-        // Don't clear selected product when switching modes
     }
-    
+
     handleCreateMode() {
         this.productMode = 'create';
-        // Don't clear selected product when switching modes
     }
 
     // ===============================
     // PRODUCT SEARCH HANDLERS
     // ===============================
-    
+
     handleSearchTermChange(event) {
         const searchValue = event.target.value;
         this.searchTerm = searchValue;
-        
+console.log( 'Search term changed to:', searchValue );
         // Clear previous timeout
         if (this.searchTimeout) {
             clearTimeout(this.searchTimeout);
         }
-        
+
         // Debounce search
         if (searchValue.length >= 2) {
             this.searchTimeout = setTimeout(() => {
@@ -270,8 +391,9 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
             this.searchResults = [];
         }
     }
-    
+
     async performProductSearch(searchTerm) {
+        console.log( 'Searching products for term:', searchTerm );
         try {
             this.searchResults = await searchProducts({ searchTerm });
         } catch (error) {
@@ -279,28 +401,31 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
             this.searchResults = [];
         }
     }
-    
+
     handleProductSelect(event) {
         const productId = event.currentTarget.dataset.id;
         const product = this.searchResults.find(p => p.Id === productId);
-        
+
         if (product) {
             this.selectedProduct = product;
             this.proposal.Product__c = product.Id;
             this.searchTerm = '';
+            this.productMode = '';
             this.searchResults = [];
+            this.showValidationMessage = false;
         }
     }
-    
+
     handleRemoveProduct() {
         this.selectedProduct = null;
         this.proposal.Product__c = null;
+        this.productMode = 'search';
     }
 
     // ===============================
     // NEW PRODUCT HANDLERS
     // ===============================
-    
+
     handleNewProductChange(event) {
         const field = event.target.name;
         this.newProduct = {
@@ -308,31 +433,31 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
             [field]: event.target.value
         };
     }
-    
+
     handleNewProductCheckbox(event) {
         this.newProduct = {
             ...this.newProduct,
             IsActive: event.target.checked
         };
     }
-    
+
     async handleCreateProduct() {
         if (!this.newProduct.Name || this.newProduct.Name.trim() === '') {
             this.showToast('Error', 'Please enter a product name', 'error');
             return;
         }
-        
+
         this.isLoading = true;
-        
+
         try {
             const result = await createProduct({
                 productData: JSON.stringify(this.newProduct)
             });
-            
+
             // Set the created product as selected
             this.selectedProduct = result;
             this.proposal.Product__c = result.Id;
-            
+
             // Reset new product form
             this.newProduct = {
                 Name: '',
@@ -343,9 +468,10 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
                 Character__c: '',
                 Family: ''
             };
-            
+
+            this.showValidationMessage = false;
             this.showToast('Success', 'Product created successfully!', 'success');
-            
+            this.productMode = '';
         } catch (error) {
             this.showToast('Error', 'Failed to create product: ' + this.reduceErrors(error), 'error');
         } finally {
@@ -354,58 +480,9 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
     }
 
     // ===============================
-    // ACCOUNT HANDLERS
-    // ===============================
-    
-    handleAccountSearchChange(event) {
-        const searchValue = event.target.value;
-        this.accountSearchTerm = searchValue;
-        
-        // Clear previous timeout
-        if (this.accountSearchTimeout) {
-            clearTimeout(this.accountSearchTimeout);
-        }
-        
-        // Debounce search
-        if (searchValue.length >= 2) {
-            this.accountSearchTimeout = setTimeout(() => {
-                this.performAccountSearch(searchValue);
-            }, 300);
-        } else {
-            this.accountResults = [];
-        }
-    }
-    
-    async performAccountSearch(searchTerm) {
-        try {
-            this.accountResults = await searchAccounts({ searchTerm });
-        } catch (error) {
-            this.showToast('Error', 'Account search failed: ' + this.reduceErrors(error), 'error');
-            this.accountResults = [];
-        }
-    }
-    
-    handleAccountSelect(event) {
-        const accountId = event.currentTarget.dataset.id;
-        const account = this.accountResults.find(a => a.Id === accountId);
-        
-        if (account) {
-            this.selectedAccount = account;
-            this.proposal.Account__c = account.Id;
-            this.accountSearchTerm = '';
-            this.accountResults = [];
-        }
-    }
-    
-    handleRemoveAccount() {
-        this.selectedAccount = null;
-        this.proposal.Account__c = null;
-    }
-
-    // ===============================
     // UTILITY METHODS
     // ===============================
-    
+
     resetForm() {
         this.proposal = {
             Name: '',
@@ -418,13 +495,13 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
             End_Date__c: null,
             Approximate_Deliver_Start_Date__c: null,
             Product__c: null,
-            Account__c: null
+            Account__c: this.accountId // Keep the account ID
         };
-        
+
         this.searchTerm = '';
         this.searchResults = [];
         this.selectedProduct = null;
-        
+
         this.newProduct = {
             Name: '',
             ProductCode: '',
@@ -434,16 +511,13 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
             Character__c: '',
             Family: ''
         };
-        
-        this.accountSearchTerm = '';
-        this.accountResults = [];
-        this.selectedAccount = null;
-        
+
         this.productMode = 'search';
-        this.showSuccess = false;
-        this.createdProposalId = null;
+        this.showValidationMessage = false;
+        this.validationMessage = '';
+        this.activeTab = 'proposal';
     }
-    
+
     showToast(title, message, variant) {
         this.dispatchEvent(
             new ShowToastEvent({
@@ -453,12 +527,12 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
             })
         );
     }
-    
+
     reduceErrors(error) {
         if (typeof error === 'string') {
             return error;
         }
-        
+
         if (error.body) {
             if (typeof error.body.message === 'string') {
                 return error.body.message;
@@ -471,18 +545,18 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
                 return fieldErrors.flat().map(e => e.message).join(', ');
             }
         }
-        
+
         if (error.message) {
             return error.message;
         }
-        
+
         return 'Unknown error';
     }
 
     // ===============================
     // NAVIGATION (Optional)
     // ===============================
-    
+
     navigateToRecord(recordId) {
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',

@@ -1,0 +1,160 @@
+/* Product Container */
+.product-container {
+    min-height: 120px;
+}
+
+/* Image Styles */
+.image-column {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 200px;
+}
+
+.product-image {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.product-image:hover {
+    transform: scale(1.02);
+}
+
+/* Image Overlay */
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.image-wrapper:hover .image-overlay {
+    opacity: 1;
+}
+
+.change-image-btn {
+    --slds-c-button-brand-color-background: rgba(255, 255, 255, 0.9);
+    --slds-c-button-brand-color-border: transparent;
+}
+
+/* No Image Box */
+.no-image-box {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #f4f6f9;
+    border-radius: 8px;
+    border: 2px dashed #d8dde6;
+}
+
+.no-image-icon {
+    --slds-c-icon-color-foreground-default: #b0adab;
+}
+
+/* Product Details */
+.product-details-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.product-description {
+    color: #706e6b;
+    line-height: 1.5;
+}
+
+/* Modal Styles */
+.slds-modal__container {
+    max-width: 500px;
+}
+
+.slds-modal__content {
+    overflow: visible;
+}
+
+/* File Input Styles */
+.slds-file-selector__body {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px dashed #d8dde6;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.slds-file-selector__body:hover {
+    border-color: #0070d2;
+    background-color: #f4f6f9;
+}
+
+.slds-file-selector__text {
+    color: #706e6b;
+    font-size: 0.875rem;
+}
+
+/* Info Alert */
+.slds-alert_info {
+    background-color: #d8edff;
+    border: none;
+    border-radius: 4px;
+}
+
+/* Badge */
+.slds-badge_inverse {
+    background-color: #0070d2;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .image-column {
+        margin-bottom: 1rem;
+    }
+
+    .product-details-column {
+        padding-left: 0 !important;
+    }
+
+    .image-wrapper {
+        max-width: 150px;
+    }
+
+    .product-image {
+        max-width: 150px;
+    }
+}
+
+/* Upload Progress */
+.upload-progress {
+    text-align: center;
+}
+
+/* Form Help Text */
+.slds-form-element__help {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-top: 0.25rem;
+}

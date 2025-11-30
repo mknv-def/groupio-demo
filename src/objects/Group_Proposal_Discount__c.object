@@ -152,51 +152,50 @@
     <enableSearch>false</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
-    <externalSharingModel>ReadWrite</externalSharingModel>
+    <externalSharingModel>ControlledByParent</externalSharingModel>
     <fields>
-        <fullName>Account__c</fullName>
-        <deleteConstraint>SetNull</deleteConstraint>
-        <label>Account</label>
-        <referenceTo>Account</referenceTo>
-        <relationshipLabel>Group Buy Proposal</relationshipLabel>
-        <relationshipName>Group_Buy_Proposal</relationshipName>
+        <fullName>Discount__c</fullName>
+        <label>Discount</label>
+        <precision>18</precision>
         <required>false</required>
+        <scale>2</scale>
         <trackTrending>false</trackTrending>
-        <type>Lookup</type>
+        <type>Percent</type>
     </fields>
     <fields>
-        <fullName>Approximate_Deliver_Start_Date__c</fullName>
-        <label>Approximate Deliver Start Date</label>
-        <required>false</required>
+        <fullName>Group_Buy_Proposal__c</fullName>
+        <label>Group Buy Proposal</label>
+        <referenceTo>Group_Buy_Proposal__c</referenceTo>
+        <relationshipLabel>Group Proposal Discounts</relationshipLabel>
+        <relationshipName>Group_Proposal_Discounts</relationshipName>
+        <relationshipOrder>0</relationshipOrder>
+        <reparentableMasterDetail>false</reparentableMasterDetail>
         <trackTrending>false</trackTrending>
-        <type>Date</type>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
     </fields>
     <fields>
-        <fullName>Description__c</fullName>
-        <label>Description</label>
-        <length>1500</length>
-        <trackTrending>false</trackTrending>
-        <type>Html</type>
-        <visibleLines>25</visibleLines>
-    </fields>
-    <fields>
-        <fullName>End_Date__c</fullName>
-        <label>End Date</label>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>DateTime</type>
-    </fields>
-    <fields>
-        <fullName>Is_Quota_Exceeded__c</fullName>
+        <fullName>Is_Main__c</fullName>
         <defaultValue>false</defaultValue>
-        <label>Is Quota Exceeded</label>
+        <label>Is Main</label>
         <trackTrending>false</trackTrending>
         <type>Checkbox</type>
     </fields>
     <fields>
-        <fullName>Max_Quota__c</fullName>
+        <fullName>Max_Quota_Discount__c</fullName>
         <externalId>false</externalId>
-        <label>Max Quota</label>
+        <label>Max Quota Discount</label>
+        <precision>18</precision>
+        <required>true</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Min_Quota_For_Discount__c</fullName>
+        <externalId>false</externalId>
+        <label>Min Quota For Discount</label>
         <precision>18</precision>
         <required>false</required>
         <scale>0</scale>
@@ -204,118 +203,14 @@
         <type>Number</type>
         <unique>false</unique>
     </fields>
-    <fields>
-        <fullName>Min_Quota__c</fullName>
-        <externalId>false</externalId>
-        <label>Min Quota</label>
-        <precision>18</precision>
-        <required>false</required>
-        <scale>0</scale>
-        <trackTrending>false</trackTrending>
-        <type>Number</type>
-        <unique>false</unique>
-    </fields>
-    <fields>
-        <fullName>Product__c</fullName>
-        <deleteConstraint>SetNull</deleteConstraint>
-        <label>Product</label>
-        <referenceTo>Product2</referenceTo>
-        <relationshipLabel>Group Buy Proposal</relationshipLabel>
-        <relationshipName>Group_Buy_Proposal</relationshipName>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>Lookup</type>
-    </fields>
-    <fields>
-        <fullName>Start_Date__c</fullName>
-        <label>Start Date</label>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>DateTime</type>
-    </fields>
-    <fields>
-        <fullName>Status__c</fullName>
-        <label>Status</label>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>Picklist</type>
-        <valueSet>
-            <restricted>true</restricted>
-            <valueSetDefinition>
-                <sorted>false</sorted>
-                <value>
-                    <fullName>Created</fullName>
-                    <default>false</default>
-                    <label>Created</label>
-                </value>
-                <value>
-                    <fullName>Pending Approval</fullName>
-                    <default>false</default>
-                    <label>Pending Approval</label>
-                </value>
-                <value>
-                    <fullName>Approved</fullName>
-                    <default>false</default>
-                    <label>Approved</label>
-                </value>
-                <value>
-                    <fullName>Active</fullName>
-                    <default>false</default>
-                    <label>Active</label>
-                </value>
-                <value>
-                    <fullName>Rejected</fullName>
-                    <default>false</default>
-                    <label>Rejected</label>
-                </value>
-                <value>
-                    <fullName>Expired</fullName>
-                    <default>false</default>
-                    <label>Expired</label>
-                </value>
-                <value>
-                    <fullName>Closed</fullName>
-                    <default>false</default>
-                    <label>Closed</label>
-                </value>
-            </valueSetDefinition>
-        </valueSet>
-    </fields>
-    <fields>
-        <fullName>Type__c</fullName>
-        <label>Type</label>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>Picklist</type>
-        <valueSet>
-            <restricted>true</restricted>
-            <valueSetDefinition>
-                <sorted>false</sorted>
-                <value>
-                    <fullName>Immediate Payment</fullName>
-                    <default>false</default>
-                    <label>Immediate Payment</label>
-                </value>
-                <value>
-                    <fullName>Payment After Reach Quota</fullName>
-                    <default>false</default>
-                    <label>Payment After Reach Quota</label>
-                </value>
-            </valueSetDefinition>
-        </valueSet>
-    </fields>
-    <label>Group Buy Proposal</label>
-    <listViews>
-        <fullName>All</fullName>
-        <filterScope>Everything</filterScope>
-        <label>All</label>
-    </listViews>
+    <label>Group Proposal Discount</label>
     <nameField>
-        <label>Group Buy Proposal Name</label>
-        <type>Text</type>
+        <displayFormat>D-{00000}</displayFormat>
+        <label>Group Proposal Discount Name</label>
+        <type>AutoNumber</type>
     </nameField>
-    <pluralLabel>Group Buy Proposal</pluralLabel>
+    <pluralLabel>Group Proposal Discounts</pluralLabel>
     <searchLayouts/>
-    <sharingModel>ReadWrite</sharingModel>
+    <sharingModel>ControlledByParent</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>

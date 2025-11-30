@@ -23,8 +23,7 @@
 }
 
 /* Selected Item Cards */
-.selected-product,
-.selected-account {
+.selected-product {
     animation: fadeIn 0.3s ease;
 }
 
@@ -93,11 +92,11 @@ lightning-card {
     .search-results {
         max-height: 200px;
     }
-    
+
     lightning-button-group {
         flex-direction: column;
     }
-    
+
     lightning-button-group lightning-button {
         margin-bottom: 0.5rem;
     }
@@ -116,7 +115,7 @@ lightning-combobox {
 }
 
 /* Action Buttons Section */
-.slds-text-align_center {
+.action-buttons {
     margin-top: 1.5rem;
     padding-top: 1rem;
     border-top: 1px solid #dddbda;
@@ -169,4 +168,127 @@ lightning-combobox {
 
 .search-results::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
+}
+
+/* ================================
+   Account Banner Styles
+   ================================ */
+.account-banner {
+    background: linear-gradient(135deg, #f4f6f9 0%, #e8ecf1 100%);
+    border-left: 4px solid #0070d2;
+    border-radius: 4px;
+}
+
+.account-banner lightning-icon {
+    color: #0070d2;
+}
+
+/* ================================
+   Success View Styles
+   ================================ */
+.success-view {
+    animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success-icon-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #04844b 0%, #2e844a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(4, 132, 75, 0.3);
+}
+
+.success-icon-container lightning-icon {
+    --slds-c-icon-color-foreground-default: white;
+}
+
+/* Form Element Static Display */
+.slds-form-element {
+    margin-bottom: 0.5rem;
+}
+
+.slds-form-element__label {
+    display: block;
+    font-size: 0.75rem;
+    color: #706e6b;
+    font-weight: 400;
+    margin-bottom: 0.25rem;
+}
+
+.slds-form-element__static {
+    font-size: 0.875rem;
+    color: #080707;
+    font-weight: 500;
+}
+
+.description-content {
+    background-color: #f4f6f9;
+    padding: 0.75rem;
+    border-radius: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* ================================
+   Validation Message Styles
+   ================================ */
+.slds-alert_error {
+    background-color: #c23934;
+    color: white;
+}
+
+.slds-alert_warning {
+    background-color: #ffb75d;
+    color: #080707;
+}
+
+/* ================================
+   Required Field Indicator
+   ================================ */
+lightning-tab[icon-name="utility:product_required"] {
+    font-weight: 600;
+}
+
+/* Badge in Success View */
+lightning-badge {
+    font-size: 0.75rem;
+}
+
+/* ================================
+   Product Tab Label Styles
+   ================================ */
+.product-required-indicator {
+    color: #c23934;
+    font-weight: bold;
+}
+
+/* Create Another Button */
+.success-view lightning-button {
+    margin-top: 1rem;
+}
+
+/* Responsive Success View */
+@media (max-width: 768px) {
+    .success-icon-container {
+        width: 60px;
+        height: 60px;
+    }
+
+    .success-view h2 {
+        font-size: 1.25rem;
+    }
 }

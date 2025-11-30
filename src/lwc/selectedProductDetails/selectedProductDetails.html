@@ -1,0 +1,243 @@
+<template>
+    <div class="slds-box product-container">
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="slds-align_absolute-center" style="min-height: 100px;">
+                <lightning-spinner alternative-text="Loading product data..." size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error Message -->
+        <template if:true={error}>
+            <div class="slds-text-color_error slds-p-around_medium">
+                <lightning-icon icon-name="utility:error" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                {error}
+            </div>
+        </template>
+
+        <!-- Product Details -->
+        <template if:true={hasProduct}>
+            <div class="slds-grid slds-wrap slds-gutters">
+                <!-- Image Column -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 image-column">
+                    <template if:true={hasImage}>
+                        <div class="image-wrapper">
+                            <img src={productImageURL} alt={product.name} class="product-image" />
+                        </div>
+                    </template>
+
+                    <template if:false={hasImage}>
+                        <div class="slds-p-around_medium slds-border_dashed slds-text-align_center no-image-box">
+                            <lightning-icon
+                                    icon-name="utility:image"
+                                    size="large"
+                                    class="slds-m-bottom_small no-image-icon">
+                            </lightning-icon>
+                            <p class="slds-text-color_weak slds-m-bottom_small">No product image</p>
+                            <lightning-button
+                                    label="Add Image"
+                                    variant="brand"
+                                    icon-name="utility:upload"
+                                    onclick={handleOpenUploadModal}>
+                            </lightning-button>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Product Details Column -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12 slds-p-left_medium product-details-column">
+                    <h1 class="slds-text-heading_large slds-m-bottom_x-small">{product.name}</h1>
+                    <template if:true={product.description}>
+                        <p class="slds-text-body_regular product-description">{product.description}</p>
+                    </template>
+
+                    <div class="slds-m-bottom_small">
+                        <c-product-category-helper
+                                product={product.rawData}
+                                account-id={effectiveAccountId}>
+                        </c-product-category-helper>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Upload/Link Modal -->
+        <template if:true={showUploadModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open" aria-modal="true" aria-labelledby="upload-modal-heading">
+                <div class="slds-modal__container">
+                    <!-- Modal Header -->
+                    <header class="slds-modal__header">
+                        <lightning-button-icon
+                                icon-name="utility:close"
+                                alternative-text="Close"
+                                class="slds-modal__close"
+                                onclick={handleCloseUploadModal}>
+                        </lightning-button-icon>
+                        <h2 id="upload-modal-heading" class="slds-modal__title slds-hyphenate">
+                            Add Product Image
+                        </h2>
+                    </header>
+
+                    <!-- Modal Body -->
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <!-- Mode Toggle -->
+                        <div class="slds-m-bottom_medium">
+                            <lightning-button-group>
+                                <lightning-button
+                                        label="Upload New Image"
+                                        variant={uploadModeVariant}
+                                        icon-name="utility:upload"
+                                        onclick={handleUploadModeClick}>
+                                </lightning-button>
+                                <lightning-button
+                                        label="Link Existing CMS Image"
+                                        variant={linkModeVariant}
+                                        icon-name="utility:link"
+                                        onclick={handleLinkModeClick}>
+                                </lightning-button>
+                            </lightning-button-group>
+                        </div>
+
+                        <!-- Media Group Selection (common for both modes) -->
+                        <div class="slds-form-element slds-m-bottom_medium">
+                            <lightning-combobox
+                                    name="mediaGroup"
+                                    label="Media Group"
+                                    value={selectedMediaGroup}
+                                    options={mediaGroupOptions}
+                                    onchange={handleMediaGroupChange}
+                                    required>
+                            </lightning-combobox>
+                            <div class="slds-form-element__help">
+                                Select where the image should appear (list view, detail page, etc.)
+                            </div>
+                        </div>
+
+                        <!-- UPLOAD MODE -->
+                        <template if:true={isUploadMode}>
+                            <!-- Info Message -->
+                            <div class="slds-notify slds-notify_alert slds-alert_info slds-m-bottom_medium" role="alert">
+                                <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                <span>
+                                    This will upload the image to Salesforce CMS and link it to the product.
+                                    The image will be visible in your B2B Commerce storefront.
+                                </span>
+                            </div>
+
+                            <!-- File Input -->
+                            <div class="slds-form-element slds-m-bottom_medium">
+                                <label class="slds-form-element__label" for="file-input">
+                                    <abbr class="slds-required" title="required">*</abbr>
+                                    Select Image File
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <input
+                                            type="file"
+                                            id="file-input"
+                                            accept={acceptedFormats}
+                                            onchange={handleFileChange}
+                                            class="slds-file-selector__input slds-assistive-text" />
+                                    <label class="slds-file-selector__body" for="file-input">
+                                        <span class="slds-file-selector__button slds-button slds-button_neutral">
+                                            <lightning-icon icon-name="utility:upload" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                            Choose File
+                                        </span>
+                                        <span class="slds-file-selector__text slds-medium-show">
+                                            <template if:true={selectedFileName}>{selectedFileName}</template>
+                                            <template if:false={selectedFileName}>No file selected</template>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="slds-form-element__help">
+                                    Supported formats: JPEG, PNG, GIF, WebP. Max size: 5MB
+                                </div>
+                            </div>
+
+                            <!-- Selected File Preview -->
+                            <template if:true={hasSelectedFile}>
+                                <div class="slds-box slds-box_x-small slds-theme_shade slds-m-bottom_medium">
+                                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                                        <div>
+                                            <lightning-icon icon-name="doctype:image" size="small" class="slds-m-right_small"></lightning-icon>
+                                            <span class="slds-text-body_regular">{selectedFileName}</span>
+                                        </div>
+                                        <lightning-badge label="Ready to upload" class="slds-badge_inverse"></lightning-badge>
+                                    </div>
+                                </div>
+                            </template>
+                        </template>
+
+                        <!-- LINK MODE -->
+                        <template if:true={isLinkMode}>
+                            <!-- Info Message -->
+                            <div class="slds-notify slds-notify_alert slds-alert_info slds-m-bottom_medium" role="alert">
+                                <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                <span>
+                                    Select an existing CMS image to link to this product.
+                                    The image must already be uploaded to your CMS workspace.
+                                </span>
+                            </div>
+
+                            <!-- CMS Image Selection -->
+                            <template if:true={isLoadingCmsImages}>
+                                <div class="slds-align_absolute-center slds-p-around_medium">
+                                    <lightning-spinner alternative-text="Loading CMS images..." size="small"></lightning-spinner>
+                                </div>
+                            </template>
+
+                            <template if:false={isLoadingCmsImages}>
+                                <template if:true={hasCmsImages}>
+                                    <div class="slds-form-element slds-m-bottom_medium">
+                                        <lightning-combobox
+                                                name="cmsContent"
+                                                label="Select CMS Image"
+                                                value={selectedCmsContentId}
+                                                options={cmsImageOptions}
+                                                onchange={handleCmsContentChange}
+                                                placeholder="Choose an image..."
+                                                required>
+                                        </lightning-combobox>
+                                    </div>
+                                </template>
+
+                                <template if:false={hasCmsImages}>
+                                    <div class="slds-box slds-box_x-small slds-theme_shade slds-text-align_center slds-m-bottom_medium">
+                                        <lightning-icon icon-name="utility:warning" size="small" class="slds-m-bottom_small"></lightning-icon>
+                                        <p class="slds-text-color_weak">
+                                            No CMS images found. Please upload images to your CMS workspace first,
+                                            or use the "Upload New Image" option.
+                                        </p>
+                                    </div>
+                                </template>
+                            </template>
+                        </template>
+
+                        <!-- Upload Progress -->
+                        <template if:true={isUploading}>
+                            <div class="slds-m-vertical_medium slds-text-align_center">
+                                <lightning-spinner alternative-text="Processing..." size="small"></lightning-spinner>
+                                <p class="slds-m-top_small">Processing...</p>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <footer class="slds-modal__footer">
+                        <lightning-button
+                                label="Cancel"
+                                onclick={handleCloseUploadModal}
+                                class="slds-m-right_small">
+                        </lightning-button>
+                        <lightning-button
+                                label={uploadButtonLabel}
+                                variant="brand"
+                                onclick={handleActionClick}
+                                disabled={uploadButtonDisabled}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>
