@@ -1,0 +1,512 @@
+/* Container & Layout */
+.proposal-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    font-family: var(--lwc-fontFamily, 'Salesforce Sans', Arial, sans-serif);
+}
+
+.loading-container,
+.error-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    gap: 0.75rem;
+}
+
+.error-container {
+    color: #c23934;
+    background: #fef1f1;
+    border-radius: 8px;
+}
+
+.error-message {
+    font-size: 0.875rem;
+}
+
+/* Header Section */
+.proposal-header {
+    margin-bottom: 1.5rem;
+}
+
+.header-content {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.product-image-container {
+    flex-shrink: 0;
+    width: 150px;
+    height: 150px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f3f3f3;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+}
+
+.proposal-info {
+    flex: 1;
+}
+
+.proposal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #181818;
+    margin: 0 0 0.25rem 0;
+    line-height: 1.3;
+}
+
+.product-name {
+    font-size: 1rem;
+    color: #706e6b;
+    margin: 0 0 0.75rem 0;
+}
+
+/* Status Badges */
+.status-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.badge-active {
+    background: #def7ec;
+    color: #046c4e;
+}
+
+.badge-closed {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-expired {
+    background: #fef1f1;
+    color: #c23934;
+}
+
+.badge-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-default {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+/* Date Info */
+.date-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.date-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    color: #706e6b;
+}
+
+/* Progress Section */
+.progress-section {
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #181818;
+    margin: 0;
+}
+
+.section-subtitle {
+    font-size: 0.875rem;
+    color: #706e6b;
+    margin: 0.25rem 0 1rem 0;
+}
+
+.quota-stats {
+    font-size: 0.875rem;
+    color: #706e6b;
+}
+
+.booked-qty {
+    font-weight: 700;
+    color: #181818;
+    font-size: 1rem;
+}
+
+.quota-separator {
+    margin: 0 0.25rem;
+}
+
+.progress-bar-container {
+    margin-bottom: 0.75rem;
+}
+
+.progress-bar {
+    position: relative;
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    border-radius: 9999px;
+    transition: width 0.5s ease-out;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-top: 0.375rem;
+}
+
+.progress-percentage {
+    font-weight: 600;
+    color: #059669;
+}
+
+.availability-info {
+    margin-top: 0.75rem;
+}
+
+.available-badge,
+.sold-out-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.available-badge {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.sold-out-badge {
+    background: #fef1f1;
+    color: #c23934;
+}
+
+/* Discount Tiers Section */
+.discount-section {
+    margin-bottom: 1.5rem;
+}
+
+.discount-tiers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.discount-tier {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.discount-tier.tier-current {
+    border-color: #10b981;
+    background: #ecfdf5;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.tier-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    margin-bottom: 0.375rem;
+}
+
+.tier-discount {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #059669;
+}
+
+.current-tier-badge {
+    background: #10b981;
+    color: white;
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tier-range {
+    font-size: 0.75rem;
+    color: #706e6b;
+}
+
+/* Description Section */
+.description-section {
+    margin-bottom: 1.5rem;
+}
+
+.description-content {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #181818;
+    margin-top: 0.75rem;
+}
+
+/* Existing Order Section */
+.existing-order-section {
+    margin-bottom: 1.5rem;
+}
+
+.existing-order-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid #10b981;
+    border-radius: 12px;
+    padding: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.order-icon {
+    width: 48px;
+    height: 48px;
+    background: #10b981;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.order-info {
+    flex: 1;
+    min-width: 150px;
+}
+
+.order-info h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #065f46;
+    margin: 0 0 0.25rem 0;
+}
+
+.order-info p {
+    font-size: 0.875rem;
+    color: #047857;
+    margin: 0;
+}
+
+.order-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Order Form Section */
+.order-section {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.order-form {
+    max-width: 400px;
+}
+
+.quantity-input {
+    margin-bottom: 1rem;
+}
+
+.quantity-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #181818;
+    margin-bottom: 0.5rem;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qty-input {
+    width: 100px;
+    text-align: center;
+}
+
+.quantity-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-top: 0.25rem;
+}
+
+.discount-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.discount-label {
+    font-size: 0.875rem;
+    color: #706e6b;
+}
+
+.discount-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #059669;
+}
+
+.connect-button {
+    width: 100%;
+}
+
+/* Unavailable Section */
+.unavailable-section {
+    margin-bottom: 1.5rem;
+}
+
+.unavailable-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    color: #92400e;
+}
+
+/* Payment Info */
+.payment-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f9f9f9;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #706e6b;
+}
+
+/* Modal */
+.modify-hint {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .proposal-container {
+        padding: 1rem;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .product-image-container {
+        width: 120px;
+        height: 120px;
+    }
+
+    .proposal-title {
+        font-size: 1.25rem;
+    }
+
+    .date-info {
+        justify-content: center;
+    }
+
+    .progress-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .existing-order-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .order-actions {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .discount-tiers {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

@@ -1,0 +1,226 @@
+<template>
+    <!-- Loading State -->
+    <template if:true={isLoading}>
+        <div class="loading-container">
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </div>
+    </template>
+
+    <!-- Error State -->
+    <template if:true={error}>
+        <div class="error-container">
+            <lightning-icon icon-name="utility:error" alternative-text="Error" size="small"></lightning-icon>
+            <span class="error-message">{error}</span>
+        </div>
+    </template>
+
+    <!-- Main Content -->
+    <template if:true={hasProposals}>
+        <div class="proposals-container">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <lightning-icon icon-name="utility:groups" size="small"></lightning-icon>
+                    <span>Group Buy Offers</span>
+                </h2>
+                <p class="section-subtitle">Join a group and save more!</p>
+            </div>
+
+            <!-- Proposals List -->
+            <div class="proposals-list">
+                <template for:each={proposalsDisplay} for:item="prop">
+                    <div key={prop.id} class="proposal-card">
+                        <!-- Card Header -->
+                        <div class="card-header">
+                            <div class="header-left">
+                                <h3 class="proposal-name">{prop.name}</h3>
+                                <template if:true={prop.endDateFormatted}>
+                                    <span class="end-date">
+                                        <lightning-icon icon-name="utility:clock" size="xx-small"></lightning-icon>
+                                        Ends: {prop.endDateFormatted}
+                                    </span>
+                                </template>
+                            </div>
+                            <div class="header-right">
+                                <div class="max-discount-badge">
+                                    <span class="discount-label">Up to</span>
+                                    <span class="discount-value">{prop.maxDiscountFormatted}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Section -->
+                        <div class="progress-section">
+                            <div class="progress-info">
+                                <span class="booked">{prop.bookedQuota} joined</span>
+                                <span class="goal">Goal: {prop.minQuota}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style={prop.progressStyle}></div>
+                            </div>
+                            <div class="progress-bottom">
+                                <span class={prop.progressClass}>{prop.progressText}</span>
+                                <span class="available">{prop.availableQuota} spots left</span>
+                            </div>
+                        </div>
+
+                        <!-- Discount Tiers -->
+                        <template if:true={prop.hasDiscounts}>
+                            <div class="tiers-section">
+                                <span class="tiers-label">Discount Tiers:</span>
+                                <div class="tiers-list">
+                                    <template for:each={prop.discountTiers} for:item="tier">
+                                        <span key={tier.id} class={tier.tierClass}>
+                                            {tier.label}
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Current Discount Display -->
+                        <template if:true={prop.currentDiscount}>
+                            <div class="current-discount">
+                                <lightning-icon icon-name="utility:discount" size="x-small"></lightning-icon>
+                                <span>Current discount: <strong>{prop.currentDiscountFormatted}</strong></span>
+                            </div>
+                        </template>
+
+                        <!-- Action Section -->
+                        <div class="action-section">
+                            <!-- Already Joined -->
+                            <template if:true={prop.hasExistingOrder}>
+                                <div class="existing-order">
+                                    <div class="order-badge">
+                                        <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                                        <span>You're in! Qty: {prop.existingOrderQty}</span>
+                                    </div>
+                                    <div class="order-actions">
+                                        <lightning-button
+                                                label="Modify"
+                                                variant="neutral"
+                                                size="small"
+                                                data-proposal-id={prop.id}
+                                                onclick={handleModifyOrder}>
+                                        </lightning-button>
+                                        <lightning-button
+                                                label="Cancel"
+                                                variant="destructive-text"
+                                                size="small"
+                                                data-proposal-id={prop.id}
+                                                onclick={handleCancelOrder}>
+                                        </lightning-button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Join Form -->
+                            <template if:false={prop.hasExistingOrder}>
+                                <template if:true={prop.canJoin}>
+                                    <div class="join-form">
+                                        <div class="quantity-row">
+                                            <label class="qty-label">Quantity:</label>
+                                            <div class="qty-controls">
+                                                <lightning-button-icon
+                                                        icon-name="utility:dash"
+                                                        alternative-text="Decrease"
+                                                        size="small"
+                                                        data-proposal-id={prop.id}
+                                                        onclick={handleDecreaseQty}>
+                                                </lightning-button-icon>
+                                                <input
+                                                        type="number"
+                                                        class="qty-input"
+                                                        value={prop.quantity}
+                                                        min="1"
+                                                        max={prop.availableQuota}
+                                                        data-proposal-id={prop.id}
+                                                        onchange={handleQtyChange} />
+                                                <lightning-button-icon
+                                                        icon-name="utility:add"
+                                                        alternative-text="Increase"
+                                                        size="small"
+                                                        data-proposal-id={prop.id}
+                                                        onclick={handleIncreaseQty}>
+                                                </lightning-button-icon>
+                                            </div>
+                                        </div>
+                                        <lightning-button
+                                                label="Connect To Group"
+                                                variant="brand"
+                                                data-proposal-id={prop.id}
+                                                onclick={handleConnectToGroup}
+                                                disabled={prop.isProcessing}
+                                                class="connect-btn">
+                                        </lightning-button>
+                                    </div>
+                                </template>
+                                <template if:false={prop.canJoin}>
+                                    <div class="cannot-join">
+                                        <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                                        <span>{prop.cannotJoinReason}</span>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+
+                        <!-- Payment Type -->
+                        <div class="payment-type">
+                            <lightning-icon icon-name="utility:money" size="xx-small"></lightning-icon>
+                            <span>{prop.paymentType}</span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <!-- No Proposals -->
+    <template if:true={noProposals}>
+        <div class="no-proposals">
+            <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+            <span>No group buy offers available for this product at the moment.</span>
+        </div>
+    </template>
+
+    <!-- Modify Order Modal -->
+    <template if:true={showModifyModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <lightning-button-icon
+                            icon-name="utility:close"
+                            alternative-text="Close"
+                            class="slds-modal__close"
+                            onclick={handleCloseModifyModal}>
+                    </lightning-button-icon>
+                    <h2 class="slds-modal__title">Modify Your Order</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input
+                            type="number"
+                            label="New Quantity"
+                            value={modifyQuantity}
+                            min="1"
+                            max={modifyMaxQuantity}
+                            onchange={handleModifyQtyChange}
+                            required>
+                    </lightning-input>
+                    <p class="modal-hint">Maximum available: {modifyMaxQuantity}</p>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                            label="Cancel"
+                            onclick={handleCloseModifyModal}>
+                    </lightning-button>
+                    <lightning-button
+                            label="Update Order"
+                            variant="brand"
+                            onclick={handleUpdateOrder}
+                            disabled={isProcessing}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

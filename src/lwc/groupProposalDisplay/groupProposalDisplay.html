@@ -1,0 +1,284 @@
+<template>
+    <!-- Loading State -->
+    <template if:true={isLoading}>
+        <div class="loading-container">
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </div>
+    </template>
+
+    <!-- Error State -->
+    <template if:true={error}>
+        <div class="error-container">
+            <lightning-icon icon-name="utility:error" alternative-text="Error" size="small"></lightning-icon>
+            <span class="error-message">{error}</span>
+        </div>
+    </template>
+
+    <!-- Main Content -->
+    <template if:true={hasProposal}>
+        <div class="proposal-container">
+            <!-- Header Section -->
+            <div class="proposal-header">
+                <div class="header-content">
+                    <!-- Product Image -->
+                    <div class="product-image-container">
+                        <template if:true={productImageUrl}>
+                            <img src={productImageUrl} alt={productName} class="product-image" />
+                        </template>
+                        <template if:false={productImageUrl}>
+                            <div class="product-image-placeholder">
+                                <lightning-icon icon-name="standard:product" size="large"></lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Proposal Info -->
+                    <div class="proposal-info">
+                        <h1 class="proposal-title">{proposalName}</h1>
+                        <p class="product-name">{productName}</p>
+
+                        <!-- Status Badge -->
+                        <div class="status-badges">
+                            <span class={statusBadgeClass}>{proposalStatus}</span>
+                            <template if:true={isExpired}>
+                                <span class="badge badge-expired">Expired</span>
+                            </template>
+                            <template if:true={isMinQuotaReached}>
+                                <span class="badge badge-success">Goal Reached!</span>
+                            </template>
+                        </div>
+
+                        <!-- Date Info -->
+                        <div class="date-info">
+                            <template if:true={endDateFormatted}>
+                                <div class="date-item">
+                                    <lightning-icon icon-name="utility:clock" size="x-small"></lightning-icon>
+                                    <span>Ends: {endDateFormatted}</span>
+                                </div>
+                            </template>
+                            <template if:true={deliveryDateFormatted}>
+                                <div class="date-item">
+                                    <lightning-icon icon-name="utility:truck" size="x-small"></lightning-icon>
+                                    <span>Est. Delivery: {deliveryDateFormatted}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <h2 class="section-title">Group Progress</h2>
+                    <div class="quota-stats">
+                        <span class="booked-qty">{bookedQuota}</span>
+                        <span class="quota-separator">/</span>
+                        <span class="min-qty">{minQuota} minimum</span>
+                        <template if:true={hasMaxQuota}>
+                            <span class="quota-separator">·</span>
+                            <span class="max-qty">{maxQuota} maximum</span>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style={progressBarStyle}></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span>0</span>
+                        <span class="progress-percentage">{progressPercentageFormatted}% to goal</span>
+                        <span>{minQuota}</span>
+                    </div>
+                </div>
+
+                <div class="availability-info">
+                    <template if:true={hasAvailableQuota}>
+                        <div class="available-badge">
+                            <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                            <span><strong>{availableQuota}</strong> spots remaining</span>
+                        </div>
+                    </template>
+                    <template if:false={hasAvailableQuota}>
+                        <div class="sold-out-badge">
+                            <lightning-icon icon-name="utility:ban" size="x-small"></lightning-icon>
+                            <span>Sold Out</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Discount Tiers Section -->
+            <template if:true={hasDiscountTiers}>
+                <div class="discount-section">
+                    <h2 class="section-title">Discount Tiers</h2>
+                    <p class="section-subtitle">The more people join, the bigger the discount!</p>
+
+                    <div class="discount-tiers">
+                        <template for:each={discountTiersDisplay} for:item="tier">
+                            <div key={tier.id} class={tier.tierClass}>
+                                <div class="tier-header">
+                                    <span class="tier-discount">{tier.discountFormatted}</span>
+                                    <template if:true={tier.isCurrent}>
+                                        <span class="current-tier-badge">Current</span>
+                                    </template>
+                                </div>
+                                <div class="tier-range">
+                                    <span>{tier.minQty} - {tier.maxQty} units</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Description Section -->
+            <template if:true={proposalDescription}>
+                <div class="description-section">
+                    <h2 class="section-title">About This Group Buy</h2>
+                    <div class="description-content" lwc:dom="manual"></div>
+                </div>
+            </template>
+
+            <!-- Existing Order Section -->
+            <template if:true={hasExistingOrder}>
+                <div class="existing-order-section">
+                    <div class="existing-order-card">
+                        <div class="order-icon">
+                            <lightning-icon icon-name="utility:check" size="medium"></lightning-icon>
+                        </div>
+                        <div class="order-info">
+                            <h3>You're In!</h3>
+                            <p>Order: <strong>{existingOrderName}</strong></p>
+                            <p>Quantity: <strong>{existingOrderQuantity}</strong></p>
+                        </div>
+                        <div class="order-actions">
+                            <lightning-button
+                                    label="Modify Order"
+                                    variant="neutral"
+                                    onclick={handleModifyOrder}>
+                            </lightning-button>
+                            <lightning-button
+                                    label="Cancel"
+                                    variant="destructive-text"
+                                    onclick={handleCancelOrder}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Connect To Group Section -->
+            <template if:false={hasExistingOrder}>
+                <template if:true={canOrder}>
+                    <div class="order-section">
+                        <div class="order-form">
+                            <h2 class="section-title">Join This Group Buy</h2>
+
+                            <div class="quantity-input">
+                                <label class="quantity-label">Quantity</label>
+                                <div class="quantity-controls">
+                                    <lightning-button-icon
+                                            icon-name="utility:dash"
+                                            alternative-text="Decrease"
+                                            onclick={handleDecreaseQuantity}
+                                            disabled={isMinQuantity}>
+                                    </lightning-button-icon>
+                                    <lightning-input
+                                            type="number"
+                                            value={orderQuantity}
+                                            min="1"
+                                            max={availableQuota}
+                                            onchange={handleQuantityChange}
+                                            class="qty-input"
+                                            variant="label-hidden">
+                                    </lightning-input>
+                                    <lightning-button-icon
+                                            icon-name="utility:add"
+                                            alternative-text="Increase"
+                                            onclick={handleIncreaseQuantity}
+                                            disabled={isMaxQuantity}>
+                                    </lightning-button-icon>
+                                </div>
+                                <span class="quantity-hint">Max: {availableQuota}</span>
+                            </div>
+
+                            <template if:true={currentDiscount}>
+                                <div class="discount-preview">
+                                    <span class="discount-label">Your discount:</span>
+                                    <span class="discount-value">{currentDiscountFormatted}</span>
+                                </div>
+                            </template>
+
+                            <lightning-button
+                                    label="Connect To Group"
+                                    variant="brand"
+                                    onclick={handleConnectToGroup}
+                                    disabled={isProcessing}
+                                    class="connect-button">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </template>
+
+                <template if:false={canOrder}>
+                    <div class="unavailable-section">
+                        <div class="unavailable-message">
+                            <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+                            <span>{unavailableReason}</span>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- Payment Type Info -->
+            <div class="payment-info">
+                <lightning-icon icon-name="utility:info_alt" size="x-small"></lightning-icon>
+                <span>Payment Type: <strong>{paymentType}</strong></span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modify Order Modal -->
+    <template if:true={showModifyModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <lightning-button-icon
+                            icon-name="utility:close"
+                            alternative-text="Close"
+                            class="slds-modal__close"
+                            onclick={handleCloseModifyModal}>
+                    </lightning-button-icon>
+                    <h2 class="slds-modal__title">Modify Your Order</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input
+                            type="number"
+                            label="New Quantity"
+                            value={modifyQuantity}
+                            min="1"
+                            max={availableQuotaForModify}
+                            onchange={handleModifyQuantityChange}
+                            required>
+                    </lightning-input>
+                    <p class="modify-hint">Available quota: {availableQuotaForModify}</p>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                            label="Cancel"
+                            onclick={handleCloseModifyModal}>
+                    </lightning-button>
+                    <lightning-button
+                            label="Update Order"
+                            variant="brand"
+                            onclick={handleUpdateOrder}
+                            disabled={isProcessing}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

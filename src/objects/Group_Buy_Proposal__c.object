@@ -172,6 +172,15 @@
         <type>Date</type>
     </fields>
     <fields>
+        <fullName>Booked_Quota__c</fullName>
+        <label>Booked Quota</label>
+        <summarizedField>Conditional_Order__c.Quantity__c</summarizedField>
+        <summaryForeignKey>Conditional_Order__c.Group_Buy_Proposal__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
         <fullName>Description__c</fullName>
         <label>Description</label>
         <length>1500</length>

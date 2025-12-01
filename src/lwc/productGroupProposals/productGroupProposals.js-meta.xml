@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>64.0</apiVersion>
+    <description>Product Group Proposals</description>
+    <isExposed>true</isExposed>
+    <masterLabel>Product Group Proposals</masterLabel>
+    <targets>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__AppPage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightningCommunity__Default">
+            <property name="productId" type="String" label="Product ID" description="The Product2 record ID" />
+            <property name="effectiveAccountId" type="String" label="Account ID" description="The customer Account ID for B2B Commerce" />
+        </targetConfig>
+        <targetConfig targets="lightning__RecordPage">
+            <objects>
+                <object>Product2</object>
+            </objects>
+            <property name="effectiveAccountId" type="String" label="Account ID" description="The customer Account ID" />
+        </targetConfig>
+        <targetConfig targets="lightning__AppPage">
+            <property name="productId" type="String" label="Product ID" description="The Product2 record ID" />
+            <property name="effectiveAccountId" type="String" label="Account ID" description="The customer Account ID" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>
