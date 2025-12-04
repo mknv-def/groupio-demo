@@ -1,106 +1,133 @@
 <template>
-    <lightning-card title="Volume Discounts" icon-name="standard:currency">
-        <div slot="actions">
-            <lightning-button label="Add Tier" icon-name="utility:add" onclick={handleAddRow}></lightning-button>
-        </div>
-
-        <div class="slds-p-around_medium">
-            <template if:true={isLoading}>
-                <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
-            </template>
-
-            <template if:true={errorMsg}>
-                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
-                    <lightning-icon icon-name="utility:error" variant="inverse" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                    <h2>{errorMsg}</h2>
-                </div>
-            </template>
-
-            <template if:true={hasRows}>
-                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
-                    <thead>
-                    <tr class="slds-line-height_reset">
-                        <th class="" scope="col">
-                            <div class="slds-truncate" title="Min Quota">Min Quota</div>
-                        </th>
-                        <th class="" scope="col">
-                            <div class="slds-truncate" title="Max Quota">Max Quota</div>
-                        </th>
-                        <th class="" scope="col">
-                            <div class="slds-truncate" title="Discount %">Discount %</div>
-                        </th>
-                        <th class="" scope="col" style="width: 3rem;">
-                            <div class="slds-truncate" title="Action"></div>
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <template for:each={rows} for:item="row" for:index="index">
-                        <tr key={row.key}>
-                            <td>
-                                <lightning-input
-                                        type="number"
-                                        variant="label-hidden"
-                                        data-index={index}
-                                        data-field="Min_Quota_For_Discount__c"
-                                        value={row.Min_Quota_For_Discount__c}
-                                        onchange={handleInputChange}
-                                        required>
-                                </lightning-input>
-                            </td>
-                            <td>
-                                <lightning-input
-                                        type="number"
-                                        variant="label-hidden"
-                                        data-index={index}
-                                        data-field="Max_Quota_Discount__c"
-                                        value={row.Max_Quota_Discount__c}
-                                        onchange={handleInputChange}
-                                        required>
-                                </lightning-input>
-                            </td>
-                            <td>
-                                <lightning-input
-                                        type="number"
-                                        variant="label-hidden"
-                                        formatter="percent-fixed"
-                                        step="0.01"
-                                        data-index={index}
-                                        data-field="Discount__c"
-                                        value={row.Discount__c}
-                                        onchange={handleInputChange}
-                                        required>
-                                </lightning-input>
-                            </td>
-                            <td>
-                                <lightning-button-icon
-                                        icon-name="utility:delete"
-                                        variant="bare"
-                                        data-index={index}
-                                        onclick={handleDeleteRow}
-                                        alternative-text="Delete">
-                                </lightning-button-icon>
-                            </td>
-                        </tr>
-                    </template>
-                    </tbody>
-                </table>
-            </template>
-
-            <template if:false={hasRows}>
-                <div class="slds-text-align_center slds-text-color_weak slds-p-vertical_medium">
-                    No discount tiers defined. Click "Add Tier" to begin.
-                </div>
-            </template>
-
-            <div class="slds-m-top_medium slds-text-align_right">
-                <lightning-button
-                        variant="brand"
-                        label="Save Discounts"
-                        onclick={handleSave}
-                        disabled={isSaveDisabled}>
-                </lightning-button>
+    <div class="discount-manager">
+        <!-- Header -->
+        <div class="discount-header">
+            <div class="header-title">
+                <lightning-icon icon-name="standard:pricing_workspace" size="small"></lightning-icon>
+                <h3>Volume Discount Tiers</h3>
             </div>
+            <lightning-button 
+                label="Add Tier" 
+                icon-name="utility:add" 
+                variant="brand"
+                onclick={handleAddRow}>
+            </lightning-button>
         </div>
-    </lightning-card>
+
+        <!-- Success Message -->
+        <template lwc:if={successMsg}>
+            <div class="message message-success">
+                <lightning-icon icon-name="utility:success" size="x-small"></lightning-icon>
+                <span>{successMsg}</span>
+            </div>
+        </template>
+
+        <!-- Error Message -->
+        <template lwc:if={errorMsg}>
+            <div class="message message-error">
+                <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                <span>{errorMsg}</span>
+            </div>
+        </template>
+
+        <!-- Loading -->
+        <template lwc:if={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Empty State -->
+        <template lwc:if={noRows}>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <lightning-icon icon-name="utility:bucket" size="large"></lightning-icon>
+                </div>
+                <p>No discount tiers defined yet.</p>
+                <p class="empty-hint">Add tiers to offer volume-based discounts to your customers.</p>
+            </div>
+        </template>
+
+        <!-- Discount Tiers Cards -->
+        <template lwc:if={hasRows}>
+            <div class="tiers-container">
+                <template for:each={rowsWithIndex} for:item="row">
+                    <div key={row.key} class="tier-card">
+                        <div class="tier-header">
+                            <span class="tier-badge">Tier {row.tierNumber}</span>
+                            <lightning-button-icon
+                                icon-name="utility:delete"
+                                variant="bare"
+                                alternative-text="Delete"
+                                data-index={row.index}
+                                onclick={handleDeleteRow}>
+                            </lightning-button-icon>
+                        </div>
+                        <div class="tier-body">
+                            <div class="tier-field">
+                                <lightning-input
+                                    type="number"
+                                    label="Min Quantity"
+                                    data-index={row.index}
+                                    data-field="Min_Quota_For_Discount__c"
+                                    value={row.Min_Quota_For_Discount__c}
+                                    onchange={handleInputChange}
+                                    min="1"
+                                    required>
+                                </lightning-input>
+                            </div>
+                            <div class="tier-field">
+                                <lightning-input
+                                    type="number"
+                                    label="Max Quantity"
+                                    data-index={row.index}
+                                    data-field="Max_Quota_Discount__c"
+                                    value={row.Max_Quota_Discount__c}
+                                    onchange={handleInputChange}
+                                    min="1"
+                                    required>
+                                </lightning-input>
+                            </div>
+                            <div class="tier-field discount-field">
+                                <lightning-input
+                                    type="number"
+                                    label="Discount %"
+                                    data-index={row.index}
+                                    data-field="Discount__c"
+                                    value={row.discountPercent}
+                                    onchange={handleInputChange}
+                                    min="0"
+                                    max="100"
+                                    step="0.1"
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div class="tier-summary">
+                            <template lwc:if={row.Min_Quota_For_Discount__c}>
+                                <span class="summary-text">
+                                    Buy <strong>{row.Min_Quota_For_Discount__c}-{row.Max_Quota_Discount__c}</strong> units 
+                                    → Get <strong class="discount-highlight">{row.discountPercent}%</strong> off
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Save Button -->
+            <div class="save-section">
+                <lightning-button
+                    variant="brand"
+                    label="Save All Discounts"
+                    icon-name="utility:save"
+                    onclick={handleSave}
+                    disabled={isSaveDisabled}>
+                </lightning-button>
+                <template lwc:if={isSaving}>
+                    <lightning-spinner alternative-text="Saving..." size="small" class="save-spinner"></lightning-spinner>
+                </template>
+            </div>
+        </template>
+    </div>
 </template>

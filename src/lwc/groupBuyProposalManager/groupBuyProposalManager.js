@@ -23,6 +23,7 @@ export default class GroupBuyProposalManager extends LightningElement {
     // View Modal
     @track showViewModal = false;
     @track viewProposal = null;
+    @track viewProposalActiveTab = 'details';
 
     // Edit Modal
     @track showEditModal = false;
@@ -143,7 +144,13 @@ export default class GroupBuyProposalManager extends LightningElement {
     // ===============================
 
     handleMainTabActive(event) {
-        this.mainActiveTab = event.target.value;
+        const newTab = event.target.value;
+        this.mainActiveTab = newTab;
+        
+        // Refresh list when switching to manage tab
+        if (newTab === 'manage') {
+            this.refreshKey++;
+        }
     }
 
     // ===============================
@@ -160,12 +167,14 @@ export default class GroupBuyProposalManager extends LightningElement {
 
     handleViewProposal(event) {
         this.viewProposal = event.detail.proposal;
+        this.viewProposalActiveTab = 'details';
         this.showViewModal = true;
     }
 
     handleCloseViewModal() {
         this.showViewModal = false;
         this.viewProposal = null;
+        this.viewProposalActiveTab = 'details';
     }
 
     handleEditFromView() {
@@ -209,11 +218,12 @@ export default class GroupBuyProposalManager extends LightningElement {
     }
 
     handleManageDiscounts(event) {
-        const { proposalId } = event.detail;
-        // Find proposal and show view modal with discounts tab active
-        this.dispatchEvent(new CustomEvent('managediscounts', {
-            detail: { proposalId }
-        }));
+        const { proposal } = event.detail;
+        if (proposal) {
+            this.viewProposal = proposal;
+            this.viewProposalActiveTab = 'discounts';
+            this.showViewModal = true;
+        }
     }
 
     handleError(event) {

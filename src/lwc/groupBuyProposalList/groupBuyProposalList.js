@@ -161,9 +161,12 @@ export default class GroupBuyProposalList extends LightningElement {
 
     handleManageDiscounts(event) {
         const proposalId = event.currentTarget.dataset.id;
-        this.dispatchEvent(new CustomEvent('managediscounts', {
-            detail: { proposalId }
-        }));
+        const proposal = this.proposals.find(p => p.Id === proposalId);
+        if (proposal) {
+            this.dispatchEvent(new CustomEvent('managediscounts', {
+                detail: { proposal }
+            }));
+        }
     }
 
     async handleSubmitForApproval(event) {

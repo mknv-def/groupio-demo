@@ -1,6 +1,19 @@
 .slds-modal__content {
     padding: 0;
-    overflow: visible;
+    overflow-y: auto;
+    max-height: calc(90vh - 180px);
+}
+
+.slds-modal__content {
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(90vh - 180px);  /* Leaves room for header + footer */
+}
+
+.discount-content {
+    padding: 24px;
+    max-height: calc(90vh - 250px);
+    overflow-y: auto;
 }
 
 .detail-content {

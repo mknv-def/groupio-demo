@@ -15,10 +15,10 @@
 
             <!-- Content -->
             <div class="slds-modal__content">
-                <lightning-tabset active-tab-value={activeTab}>
+                <lightning-tabset variant="scoped" active-tab-value={activeTab}>
                     
                     <!-- Details Tab -->
-                    <lightning-tab label="Details" value="details">
+                    <lightning-tab label="Details" value="details" onactive={handleTabActive}>
                         <div class="detail-content">
                             <!-- Status Header -->
                             <div class="status-header">
@@ -143,7 +143,7 @@
                     </lightning-tab>
 
                     <!-- Discounts Tab -->
-                    <lightning-tab label="Discounts" value="discounts">
+                    <lightning-tab label="Discounts" value="discounts" onactive={handleTabActive}>
                         <div class="discount-content">
                             <c-group-buy-discount-manager record-id={proposal.Id}></c-group-buy-discount-manager>
                         </div>

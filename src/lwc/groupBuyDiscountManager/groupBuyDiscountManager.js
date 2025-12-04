@@ -1,15 +1,16 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import getDiscounts from '@salesforce/apex/GroupBuyDiscountController.getDiscounts';
 import saveDiscounts from '@salesforce/apex/GroupBuyDiscountController.saveDiscounts';
 
 export default class GroupBuyDiscountManager extends LightningElement {
-    @api recordId; // Group_Buy_Proposal__c ID
+    @api recordId;
 
     @track rows = [];
     @track isLoading = false;
+    @track isSaving = false;
     @track errorMsg = '';
+    @track successMsg = '';
 
     deletedRecordIds = [];
     wiredDiscountResult;
@@ -18,28 +19,50 @@ export default class GroupBuyDiscountManager extends LightningElement {
     wiredDiscounts(result) {
         this.wiredDiscountResult = result;
         if (result.data) {
-            // Transform data for UI usage (add a temporary key for tracking)
             this.rows = result.data.map(item => ({
                 ...item,
-                key: item.Id
+                key: item.Id,
+                discountDisplay: item.Discount__c ? (item.Discount__c * 100).toFixed(1) + '%' : '0%'
             }));
             this.errorMsg = '';
         } else if (result.error) {
-            this.showToast('Error', 'Error loading discounts', 'error');
+            this.errorMsg = 'Error loading discounts';
+            console.error(result.error);
         }
     }
+
+    // ===============================
+    // GETTERS
+    // ===============================
 
     get hasRows() {
         return this.rows.length > 0;
     }
 
-    get isSaveDisabled() {
-        return this.isLoading || this.rows.length === 0;
+    get noRows() {
+        return this.rows.length === 0;
     }
+
+    get isSaveDisabled() {
+        return this.isLoading || this.isSaving || this.rows.length === 0;
+    }
+
+    get rowsWithIndex() {
+        return this.rows.map((row, index) => ({
+            ...row,
+            index,
+            tierNumber: index + 1,
+            discountPercent: row.Discount__c ? (row.Discount__c * 100).toFixed(1) : '0'
+        }));
+    }
+
+    // ===============================
+    // HANDLERS
+    // ===============================
 
     handleAddRow() {
         const newRow = {
-            key: Date.now(), // Temporary ID for UI rendering
+            key: Date.now(),
             Id: null,
             Group_Buy_Proposal__c: this.recordId,
             Min_Quota_For_Discount__c: null,
@@ -47,34 +70,47 @@ export default class GroupBuyDiscountManager extends LightningElement {
             Discount__c: null
         };
         this.rows = [...this.rows, newRow];
+        this.clearMessages();
     }
 
     handleDeleteRow(event) {
-        const index = event.currentTarget.dataset.index;
+        const index = parseInt(event.currentTarget.dataset.index, 10);
         const rowToDelete = this.rows[index];
 
-        // If it's an existing record in SF, mark for deletion
         if (rowToDelete.Id) {
             this.deletedRecordIds.push(rowToDelete.Id);
         }
 
-        // Remove from UI array
-        this.rows = this.rows.filter((_, i) => i !== parseInt(index));
+        this.rows = this.rows.filter((_, i) => i !== index);
+        this.clearMessages();
     }
 
     handleInputChange(event) {
-        const { index, field } = event.target.dataset;
-        const value = event.target.value;
+        const index = parseInt(event.target.dataset.index, 10);
+        const field = event.target.dataset.field;
+        let value = event.target.value;
 
-        let row = this.rows[index];
-        row[field] = value;
+        // Convert percentage input to decimal for Discount__c
+        if (field === 'Discount__c' && value !== null && value !== '') {
+            value = parseFloat(value) / 100;
+        }
 
-        this.rows = [...this.rows]; // Trigger reactivity
-        this.errorMsg = ''; // Clear errors on edit
+        const updatedRows = [...this.rows];
+        updatedRows[index] = {
+            ...updatedRows[index],
+            [field]: value
+        };
+        this.rows = updatedRows;
+        this.clearMessages();
+    }
+
+    clearMessages() {
+        this.errorMsg = '';
+        this.successMsg = '';
     }
 
     validateData() {
-        // 1. Basic Field Validation (Required fields)
+        // Basic field validation
         const allValid = [...this.template.querySelectorAll('lightning-input')]
             .reduce((validSoFar, inputCmp) => {
                 inputCmp.reportValidity();
@@ -86,7 +122,7 @@ export default class GroupBuyDiscountManager extends LightningElement {
             return false;
         }
 
-        // 2. Logic Validation (Min < Max)
+        // Logic validation (Min <= Max)
         for (let row of this.rows) {
             let min = Number(row.Min_Quota_For_Discount__c);
             let max = Number(row.Max_Quota_Discount__c);
@@ -97,26 +133,20 @@ export default class GroupBuyDiscountManager extends LightningElement {
             }
         }
 
-        // 3. Overlap Validation
-        // Sort rows by Min Quota to make checking easier
-        // We create a copy to not mess up UI order if user prefers insertion order
+        // Overlap validation
         let sortedRows = [...this.rows].sort((a, b) => {
             return Number(a.Min_Quota_For_Discount__c) - Number(b.Min_Quota_For_Discount__c);
         });
 
         for (let i = 0; i < sortedRows.length - 1; i++) {
             let current = sortedRows[i];
-            let next = sortedRows[i+1];
-
-            // Check if Current Max overlaps Next Min
-            // Example: Row 1 (1-10), Row 2 (5-15). 10 >= 5 (Overlap)
-            // Example: Row 1 (1-10), Row 2 (11-20). 10 < 11 (No overlap)
+            let next = sortedRows[i + 1];
 
             let currentMax = Number(current.Max_Quota_Discount__c);
             let nextMin = Number(next.Min_Quota_For_Discount__c);
 
             if (currentMax >= nextMin) {
-                this.errorMsg = `Quota Range Overlap detected between ranges: [${current.Min_Quota_For_Discount__c}-${current.Max_Quota_Discount__c}] and [${next.Min_Quota_For_Discount__c}-${next.Max_Quota_Discount__c}]`;
+                this.errorMsg = `Quota range overlap: [${current.Min_Quota_For_Discount__c}-${current.Max_Quota_Discount__c}] and [${next.Min_Quota_For_Discount__c}-${next.Max_Quota_Discount__c}]`;
                 return false;
             }
         }
@@ -129,11 +159,11 @@ export default class GroupBuyDiscountManager extends LightningElement {
             return;
         }
 
-        this.isLoading = true;
+        this.isSaving = true;
+        this.clearMessages();
 
-        // Clean data for Apex (remove temporary 'key' property)
         const recordsToSave = this.rows.map(row => {
-            const { key, ...cleanRow } = row;
+            const { key, discountDisplay, tierNumber, discountPercent, index, ...cleanRow } = row;
             return cleanRow;
         });
 
@@ -143,21 +173,20 @@ export default class GroupBuyDiscountManager extends LightningElement {
                 discountsToDelete: this.deletedRecordIds
             });
 
-            this.showToast('Success', 'Discounts saved successfully', 'success');
-            this.deletedRecordIds = []; // Clear deleted queue
-            await refreshApex(this.wiredDiscountResult); // Reload data
+            this.successMsg = 'Discounts saved successfully!';
+            this.deletedRecordIds = [];
+            await refreshApex(this.wiredDiscountResult);
+
+            // Auto-hide success message
+            setTimeout(() => {
+                this.successMsg = '';
+            }, 3000);
 
         } catch (error) {
             console.error(error);
-            this.showToast('Error', error.body ? error.body.message : error.message, 'error');
+            this.errorMsg = error.body ? error.body.message : error.message;
         } finally {
-            this.isLoading = false;
+            this.isSaving = false;
         }
-    }
-
-    showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({ title, message, variant })
-        );
     }
 }

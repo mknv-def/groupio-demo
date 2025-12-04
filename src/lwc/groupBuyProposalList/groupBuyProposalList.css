@@ -256,13 +256,14 @@
 
 /* Actions */
 .cell-actions {
-    min-width: 180px;
+    min-width: 280px;
 }
 
 .actions-container {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 /* Responsive */

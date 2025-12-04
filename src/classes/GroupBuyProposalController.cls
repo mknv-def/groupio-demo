@@ -173,7 +173,6 @@ public with sharing class GroupBuyProposalController {
                             CreatedDate, LastModifiedDate
                     FROM Group_Buy_Proposal__c
                     WHERE CreatedById = :UserInfo.getUserId()
-                    AND Account__c = null
                     ORDER BY CreatedDate DESC
                     LIMIT 100
             ];

@@ -105,42 +105,39 @@
                                 <!-- Actions -->
                                 <td class="cell-actions">
                                     <div class="actions-container">
-                                        <lightning-button-icon
+                                        <lightning-button
+                                            label="View"
                                             icon-name="utility:preview"
-                                            alternative-text="View"
-                                            title="View Details"
-                                            size="small"
+                                            variant="neutral"
                                             data-id={prop.Id}
                                             onclick={handleView}>
-                                        </lightning-button-icon>
+                                        </lightning-button>
+
+                                        <lightning-button
+                                            label="Discounts"
+                                            icon-name="utility:moneybag"
+                                            variant="neutral"
+                                            data-id={prop.Id}
+                                            onclick={handleManageDiscounts}>
+                                        </lightning-button>
 
                                         <template lwc:if={prop.canEdit}>
                                             <lightning-button-icon
                                                 icon-name="utility:edit"
                                                 alternative-text="Edit"
                                                 title="Edit"
-                                                size="small"
+                                                variant="border-filled"
                                                 data-id={prop.Id}
                                                 onclick={handleEdit}>
                                             </lightning-button-icon>
                                         </template>
-
-                                        <lightning-button-icon
-                                            icon-name="utility:moneybag"
-                                            alternative-text="Discounts"
-                                            title="Manage Discounts"
-                                            size="small"
-                                            data-id={prop.Id}
-                                            onclick={handleManageDiscounts}>
-                                        </lightning-button-icon>
 
                                         <template lwc:if={prop.canDelete}>
                                             <lightning-button-icon
                                                 icon-name="utility:delete"
                                                 alternative-text="Delete"
                                                 title="Delete"
-                                                size="small"
-                                                variant="bare"
+                                                variant="border-filled"
                                                 data-id={prop.Id}
                                                 onclick={handleDelete}>
                                             </lightning-button-icon>
@@ -150,7 +147,6 @@
                                             <lightning-button
                                                 label="Submit"
                                                 variant="brand"
-                                                size="small"
                                                 data-id={prop.Id}
                                                 onclick={handleSubmitForApproval}>
                                             </lightning-button>

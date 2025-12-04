@@ -2,8 +2,17 @@ import { LightningElement, api, track } from 'lwc';
 
 export default class GroupBuyProposalDetail extends LightningElement {
     @api proposal;
-
-    @track activeTab = 'details';
+    
+    // Use a setter/getter for activeTab to handle external changes
+    _activeTab = 'details';
+    
+    @api
+    get activeTab() {
+        return this._activeTab;
+    }
+    set activeTab(value) {
+        this._activeTab = value || 'details';
+    }
 
     // ===============================
     // GETTERS
@@ -100,6 +109,10 @@ export default class GroupBuyProposalDetail extends LightningElement {
     // ===============================
     // HANDLERS
     // ===============================
+
+    handleTabActive(event) {
+        this._activeTab = event.target.value;
+    }
 
     handleClose() {
         this.dispatchEvent(new CustomEvent('close'));

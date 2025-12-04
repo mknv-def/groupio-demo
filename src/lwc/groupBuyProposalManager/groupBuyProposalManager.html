@@ -13,10 +13,10 @@
         </template>
 
         <!-- Main Tabs -->
-        <lightning-tabset active-tab-value={mainActiveTab} onactive={handleMainTabActive}>
+        <lightning-tabset variant="scoped" active-tab-value={mainActiveTab}>
             
             <!-- CREATE PROPOSAL TAB -->
-            <lightning-tab label="Create Proposal" value="create" icon-name="utility:add">
+            <lightning-tab label="Create Proposal" value="create" icon-name="utility:add" onactive={handleMainTabActive}>
                 <div class="slds-p-around_medium">
                     <!-- Account Banner -->
                     <template lwc:if={hasAccountId}>
@@ -36,7 +36,7 @@
             </lightning-tab>
 
             <!-- MY PROPOSALS TAB -->
-            <lightning-tab label="My Proposals" value="manage" icon-name="utility:list">
+            <lightning-tab label="My Proposals" value="manage" icon-name="utility:list" onactive={handleMainTabActive}>
                 <div class="slds-p-around_medium">
                     <!-- Proposals List Component -->
                     <c-group-buy-proposal-list
@@ -57,6 +57,7 @@
         <template lwc:if={showViewModal}>
             <c-group-buy-proposal-detail
                 proposal={viewProposal}
+                active-tab={viewProposalActiveTab}
                 onclose={handleCloseViewModal}
                 onedit={handleEditFromView}>
             </c-group-buy-proposal-detail>
