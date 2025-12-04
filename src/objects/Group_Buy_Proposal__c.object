@@ -172,6 +172,28 @@
         <type>Date</type>
     </fields>
     <fields>
+        <fullName>Available_Quota__c</fullName>
+        <externalId>false</externalId>
+        <formula>Max_Quota__c - Booked_Quota__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Available Quota</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Base_Price__c</fullName>
+        <label>Base Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
         <fullName>Booked_Quota__c</fullName>
         <label>Booked Quota</label>
         <summarizedField>Conditional_Order__c.Quantity__c</summarizedField>
@@ -194,6 +216,14 @@
         <required>false</required>
         <trackTrending>false</trackTrending>
         <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Is_Min_Quota_Reached__c</fullName>
+        <formula>Booked_Quota__c &gt;= Min_Quota__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Is Min Quota Reached</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
     </fields>
     <fields>
         <fullName>Is_Quota_Exceeded__c</fullName>
@@ -234,6 +264,17 @@
         <required>false</required>
         <trackTrending>false</trackTrending>
         <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Progress_Percentage__c</fullName>
+        <formula>Booked_Quota__c / Min_Quota__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Progress Percentage</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
     </fields>
     <fields>
         <fullName>Start_Date__c</fullName>

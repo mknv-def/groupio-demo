@@ -1,0 +1,748 @@
+<template>
+    <div class="proposal-manager-container">
+
+        <template lwc:if={hasNotification}>
+            <div class={notificationClass}>
+                <lightning-icon icon-name={notificationIcon} size="x-small"></lightning-icon>
+                <span class="notification-message">{notification.message}</span>
+                <button class="notification-close" onclick={handleCloseNotification}>
+                    <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                </button>
+            </div>
+        </template>
+
+        <template lwc:if={isLoading}>
+            <div class="loading-overlay">
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <lightning-tabset active-tab-value={mainActiveTab}>
+
+            <lightning-tab label="Create Proposal" value="create" icon-name="utility:add" onactive={handleMainTabActive}>
+                <div class="slds-p-around_medium">
+
+                    <template lwc:if={showSuccess}>
+                        <div class="success-view">
+                            <div class="slds-align_absolute-center slds-m-bottom_large">
+                                <div class="success-icon-container">
+                                    <lightning-icon icon-name="action:approval" size="large"></lightning-icon>
+                                </div>
+                            </div>
+
+                            <h2 class="slds-text-heading_medium slds-text-align_center slds-m-bottom_medium">
+                                Group Buy Proposal Created Successfully!
+                            </h2>
+
+                            <div class="slds-m-top_medium">
+                                <c-group-buy-discount-manager record-id={createdProposal.Id}></c-group-buy-discount-manager>
+                            </div>
+
+                            <lightning-card title="Proposal Details" icon-name="standard:document">
+                                <div class="slds-p-around_medium">
+                                    <lightning-layout multiple-rows>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Proposal Name</span>
+                                                <div class="slds-form-element__static">{createdProposal.Name}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Status</span>
+                                                <div class="slds-form-element__static">
+                                                    <lightning-badge label={createdProposal.Status__c}></lightning-badge>
+                                                </div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Type</span>
+                                                <div class="slds-form-element__static">{createdProposal.Type__c}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Product</span>
+                                                <div class="slds-form-element__static">{createdProposalProductName}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Base Price</span>
+                                                <div class="slds-form-element__static">{formattedBasePrice}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Min Quota</span>
+                                                <div class="slds-form-element__static">{createdProposal.Min_Quota__c}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Max Quota</span>
+                                                <div class="slds-form-element__static">{createdProposal.Max_Quota__c}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Start Date</span>
+                                                <div class="slds-form-element__static">{formattedStartDate}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">End Date</span>
+                                                <div class="slds-form-element__static">{formattedEndDate}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <div class="slds-form-element">
+                                                <span class="slds-form-element__label">Delivery Start Date</span>
+                                                <div class="slds-form-element__static">{createdProposal.Approximate_Deliver_Start_Date__c}</div>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <template lwc:if={createdProposal.Description__c}>
+                                            <lightning-layout-item size="12" padding="around-small">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label">Description</span>
+                                                    <div class="slds-form-element__static description-content">
+                                                        <lightning-formatted-rich-text value={createdProposal.Description__c}></lightning-formatted-rich-text>
+                                                    </div>
+                                                </div>
+                                            </lightning-layout-item>
+                                        </template>
+                                    </lightning-layout>
+                                </div>
+                            </lightning-card>
+
+                            <div class="slds-m-top_large slds-text-align_center">
+                                <lightning-button
+                                        label="Create Another Proposal"
+                                        variant="brand"
+                                        onclick={handleCreateAnother}
+                                        icon-name="utility:add">
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template lwc:else>
+                        <template lwc:if={hasAccountId}>
+                            <div class="account-banner slds-box slds-box_x-small slds-m-bottom_medium">
+                                <lightning-layout vertical-align="center">
+                                    <lightning-layout-item>
+                                        <lightning-icon icon-name="standard:account" size="small" class="slds-m-right_small"></lightning-icon>
+                                    </lightning-layout-item>
+                                    <lightning-layout-item flexibility="grow">
+                                        <span class="slds-text-title_bold">Creating proposal for: </span>
+                                        <span>{accountDisplayName}</span>
+                                    </lightning-layout-item>
+                                </lightning-layout>
+                            </div>
+                        </template>
+
+                        <lightning-tabset active-tab-value={createActiveTab}>
+
+                            <lightning-tab label="Proposal Details *" value="proposal">
+                                <div class="slds-p-around_small">
+                                    <lightning-layout multiple-rows>
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-input
+                                                    type="text"
+                                                    label="Proposal Name"
+                                                    name="Name"
+                                                    value={proposal.Name}
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-combobox
+                                                    name="Status__c"
+                                                    label="Status"
+                                                    value={proposal.Status__c}
+                                                    options={statusOptions}
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-combobox>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-combobox
+                                                    name="Type__c"
+                                                    label="Type"
+                                                    value={proposal.Type__c}
+                                                    options={typeOptions}
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-combobox>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-input
+                                                    type="number"
+                                                    label="Base Price"
+                                                    name="Base_Price__c"
+                                                    value={proposal.Base_Price__c}
+                                                    formatter="currency"
+                                                    step="0.01"
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-input
+                                                    type="number"
+                                                    label="Min Quota"
+                                                    name="Min_Quota__c"
+                                                    value={proposal.Min_Quota__c}
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-input
+                                                    type="number"
+                                                    label="Max Quota"
+                                                    name="Max_Quota__c"
+                                                    value={proposal.Max_Quota__c}
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-input
+                                                    type="datetime"
+                                                    label="Start Date"
+                                                    name="Start_Date__c"
+                                                    value={proposal.Start_Date__c}
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-input
+                                                    type="datetime"
+                                                    label="End Date"
+                                                    name="End_Date__c"
+                                                    value={proposal.End_Date__c}
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-input
+                                                    type="date"
+                                                    label="Approximate Delivery Start Date"
+                                                    name="Approximate_Deliver_Start_Date__c"
+                                                    value={proposal.Approximate_Deliver_Start_Date__c}
+                                                    onchange={handleProposalChange}
+                                                    required>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+
+                                        <lightning-layout-item size="12" padding="around-small">
+                                            <lightning-input-rich-text
+                                                    label="Description"
+                                                    value={proposal.Description__c}
+                                                    onchange={handleProposalChange}
+                                                    data-name="Description__c"
+                                                    formats="['font', 'size', 'bold', 'italic', 'underline', 'strike', 'list', 'indent', 'align', 'link', 'clean', 'table', 'header']">
+                                            </lightning-input-rich-text>
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                </div>
+                            </lightning-tab>
+
+                            <lightning-tab label={productTabLabel} value="product">
+                                <div class="slds-p-around_small">
+
+                                    <template lwc:if={isNoProductSelected}>
+                                        <div class="slds-m-bottom_medium">
+                                            <lightning-button-group>
+                                                <lightning-button
+                                                        label="Search Existing"
+                                                        variant={searchButtonVariant}
+                                                        onclick={handleSearchMode}
+                                                        icon-name="utility:search">
+                                                </lightning-button>
+                                                <lightning-button
+                                                        label="Create New"
+                                                        variant={createButtonVariant}
+                                                        onclick={handleCreateMode}
+                                                        icon-name="utility:add">
+                                                </lightning-button>
+                                            </lightning-button-group>
+                                        </div>
+                                    </template>
+
+                                    <template lwc:if={isSearchMode}>
+                                        <div class="product-search-section">
+                                            <lightning-input
+                                                    type="search"
+                                                    label="Search Products"
+                                                    placeholder="Enter product name or code..."
+                                                    value={searchTerm}
+                                                    onchange={handleSearchTermChange}>
+                                            </lightning-input>
+
+                                            <template lwc:if={showSearchResults}>
+                                                <div class="search-results slds-m-top_small">
+                                                    <template lwc:if={hasSearchResults}>
+                                                        <ul class="slds-listbox slds-listbox_vertical">
+                                                            <template for:each={searchResults} for:item="product">
+                                                                <li key={product.Id}
+                                                                    class="slds-listbox__item search-result-item slds-p-around_small"
+                                                                    data-id={product.Id}
+                                                                    onclick={handleProductSelect}>
+                                                                    <div class="slds-media slds-media_center">
+                                                                        <div class="slds-media__figure">
+                                                                            <lightning-icon icon-name="standard:product" size="small"></lightning-icon>
+                                                                        </div>
+                                                                        <div class="slds-media__body">
+                                                                            <span class="slds-text-title_bold">{product.Name}</span>
+                                                                            <template lwc:if={product.ProductCode}>
+                                                                                <span class="slds-text-body_small slds-m-left_x-small">({product.ProductCode})</span>
+                                                                            </template>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            </template>
+                                                        </ul>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <div class="slds-p-around_medium slds-text-align_center slds-text-color_weak">
+                                                            No products found. Try different search terms or create a new product.
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <template lwc:if={isCreateMode}>
+                                        <div class="product-create-section">
+                                            <lightning-layout multiple-rows>
+                                                <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                    <lightning-input
+                                                            type="text"
+                                                            label="Product Name"
+                                                            name="Name"
+                                                            value={newProduct.Name}
+                                                            onchange={handleNewProductChange}
+                                                            required>
+                                                    </lightning-input>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                    <lightning-input
+                                                            type="text"
+                                                            label="Product Code"
+                                                            name="ProductCode"
+                                                            value={newProduct.ProductCode}
+                                                            onchange={handleNewProductChange}>
+                                                    </lightning-input>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                    <lightning-combobox
+                                                            name="Brand__c"
+                                                            label="Brand"
+                                                            value={newProduct.Brand__c}
+                                                            options={brandOptions}
+                                                            onchange={handleNewProductChange}>
+                                                    </lightning-combobox>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                    <lightning-combobox
+                                                            name="Character__c"
+                                                            label="Character"
+                                                            value={newProduct.Character__c}
+                                                            options={characterOptions}
+                                                            onchange={handleNewProductChange}>
+                                                    </lightning-combobox>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                    <lightning-input
+                                                            type="checkbox"
+                                                            label="Active"
+                                                            name="IsActive"
+                                                            checked={newProduct.IsActive}
+                                                            onchange={handleNewProductCheckbox}>
+                                                    </lightning-input>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="12" padding="around-small">
+                                                    <lightning-textarea
+                                                            name="Description"
+                                                            label="Product Description"
+                                                            value={newProduct.Description}
+                                                            onchange={handleNewProductChange}>
+                                                    </lightning-textarea>
+                                                </lightning-layout-item>
+
+                                                <lightning-layout-item size="12" padding="around-small">
+                                                    <lightning-button
+                                                            label="Create Product"
+                                                            variant="brand"
+                                                            onclick={handleCreateProduct}
+                                                            disabled={isCreateProductDisabled}>
+                                                    </lightning-button>
+                                                </lightning-layout-item>
+                                            </lightning-layout>
+                                        </div>
+                                    </template>
+
+                                    <template lwc:if={selectedProduct}>
+                                        <div class="selected-product slds-m-top_medium">
+                                            <lightning-card title="Selected Product" icon-name="action:check">
+                                                <div slot="actions">
+                                                    <lightning-button-icon
+                                                            icon-name="utility:close"
+                                                            alternative-text="Remove"
+                                                            onclick={handleRemoveProduct}>
+                                                    </lightning-button-icon>
+                                                </div>
+                                                <div class="slds-p-around_small">
+                                                    <lightning-layout>
+                                                        <lightning-layout-item flexibility="grow">
+                                                            <p><strong>Name:</strong> {selectedProduct.Name}</p>
+                                                            <template lwc:if={selectedProduct.ProductCode}>
+                                                                <p><strong>Code:</strong> {selectedProduct.ProductCode}</p>
+                                                            </template>
+                                                        </lightning-layout-item>
+                                                    </lightning-layout>
+                                                </div>
+                                            </lightning-card>
+                                        </div>
+                                    </template>
+                                </div>
+                            </lightning-tab>
+                        </lightning-tabset>
+
+                        <div class="slds-m-top_large slds-text-align_center action-buttons">
+                            <lightning-button
+                                    label="Cancel"
+                                    onclick={handleCancel}
+                                    class="slds-m-right_small">
+                            </lightning-button>
+                            <lightning-button
+                                    label="Create Proposal"
+                                    variant="brand"
+                                    onclick={handleCreateProposal}
+                                    disabled={isCreateProposalDisabled}>
+                            </lightning-button>
+                        </div>
+
+                        <template lwc:if={showValidationMessage}>
+                            <div class="validation-message slds-m-top_medium">
+                                <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
+                                <span>{validationMessage}</span>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </lightning-tab>
+
+            <lightning-tab label="My Proposals" value="manage" icon-name="utility:list"  onactive={handleMainTabActive}>
+                <div class="slds-p-around_medium">
+
+                    <template lwc:if={isLoadingProposals}>
+                        <div class="loading-container">
+                            <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <template lwc:else>
+                        <template lwc:if={hasMyProposals}>
+                            <div class="proposals-grid">
+                                <template for:each={myProposalsDisplay} for:item="prop">
+                                    <div key={prop.Id} class="proposal-card">
+                                        <div class="proposal-card-header">
+                                            <h3 class="proposal-name">{prop.Name}</h3>
+                                            <span class={prop.statusClass}>{prop.Status__c}</span>
+                                        </div>
+
+                                        <div class="proposal-card-body">
+                                            <div class="proposal-info-row">
+                                                <lightning-icon icon-name="standard:product" size="xx-small"></lightning-icon>
+                                                <span>{prop.productName}</span>
+                                            </div>
+
+                                            <div class="proposal-info-row">
+                                                <lightning-icon icon-name="utility:moneybag" size="xx-small"></lightning-icon>
+                                                <span>Base Price: {prop.basePriceFormatted}</span>
+                                            </div>
+
+                                            <div class="proposal-info-row">
+                                                <lightning-icon icon-name="utility:date_input" size="xx-small"></lightning-icon>
+                                                <span>{prop.startDateFormatted} - {prop.endDateFormatted}</span>
+                                            </div>
+
+                                            <div class="proposal-info-row">
+                                                <lightning-icon icon-name="utility:groups" size="xx-small"></lightning-icon>
+                                                <span>Quota: {prop.Booked_Quota__c} / {prop.Min_Quota__c} min ({prop.Max_Quota__c} max)</span>
+                                            </div>
+
+                                            <div class="progress-section">
+                                                <div class="progress-bar-container">
+                                                    <div class="progress-bar" style={prop.progressStyle}></div>
+                                                </div>
+                                                <span class={prop.progressClass}>{prop.progressText}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="proposal-card-footer">
+                                            <lightning-button-icon
+                                                    icon-name="utility:preview"
+                                                    alternative-text="View"
+                                                    title="View Details"
+                                                    data-id={prop.Id}
+                                                    onclick={handleViewProposal}>
+                                            </lightning-button-icon>
+
+                                            <template lwc:if={prop.canEdit}>
+                                                <lightning-button-icon
+                                                        icon-name="utility:edit"
+                                                        alternative-text="Edit"
+                                                        title="Edit Proposal"
+                                                        data-id={prop.Id}
+                                                        onclick={handleEditProposal}>
+                                                </lightning-button-icon>
+                                            </template>
+
+                                            <lightning-button-icon
+                                                    icon-name="utility:money"
+                                                    alternative-text="Discounts"
+                                                    title="Manage Discounts"
+                                                    data-id={prop.Id}
+                                                    onclick={handleManageDiscounts}>
+                                            </lightning-button-icon>
+
+                                            <template lwc:if={prop.canDelete}>
+                                                <lightning-button-icon
+                                                        icon-name="utility:delete"
+                                                        alternative-text="Delete"
+                                                        title="Delete Proposal"
+                                                        variant="bare"
+                                                        data-id={prop.Id}
+                                                        onclick={handleDeleteProposal}>
+                                                </lightning-button-icon>
+                                            </template>
+
+                                            <template lwc:if={prop.isCreated}>
+                                                <lightning-button
+                                                        label="Submit for Approval"
+                                                        variant="brand"
+                                                        size="small"
+                                                        data-id={prop.Id}
+                                                        onclick={handleSubmitForApproval}>
+                                                </lightning-button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template lwc:else>
+                            <div class="empty-state slds-text-align_center slds-p-vertical_large">
+                                <lightning-icon icon-name="utility:info" size="large" class="slds-m-bottom_medium"></lightning-icon>
+                                <h3 class="slds-text-heading_small slds-m-bottom_small">No Proposals Yet</h3>
+                                <p class="slds-text-body_regular slds-text-color_weak">
+                                    You haven't created any group buy proposals. Switch to the "Create Proposal" tab to get started.
+                                </p>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </lightning-tab>
+        </lightning-tabset>
+
+        <template lwc:if={showEditModal}>
+            <section class="slds-modal slds-fade-in-open slds-modal_large">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <lightning-button-icon
+                                icon-name="utility:close"
+                                variant="bare-inverse"
+                                class="slds-modal__close"
+                                onclick={handleCloseEditModal}>
+                        </lightning-button-icon>
+                        <h2 class="slds-modal__title">Edit Proposal</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-layout multiple-rows>
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                        type="text"
+                                        label="Proposal Name"
+                                        name="Name"
+                                        value={editProposal.Name}
+                                        onchange={handleEditProposalChange}
+                                        required>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-combobox
+                                        name="Status__c"
+                                        label="Status"
+                                        value={editProposal.Status__c}
+                                        options={statusOptions}
+                                        onchange={handleEditProposalChange}>
+                                </lightning-combobox>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-combobox
+                                        name="Type__c"
+                                        label="Type"
+                                        value={editProposal.Type__c}
+                                        options={typeOptions}
+                                        onchange={handleEditProposalChange}>
+                                </lightning-combobox>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                        type="number"
+                                        label="Base Price"
+                                        name="Base_Price__c"
+                                        value={editProposal.Base_Price__c}
+                                        formatter="currency"
+                                        step="0.01"
+                                        onchange={handleEditProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                        type="number"
+                                        label="Min Quota"
+                                        name="Min_Quota__c"
+                                        value={editProposal.Min_Quota__c}
+                                        onchange={handleEditProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                        type="number"
+                                        label="Max Quota"
+                                        name="Max_Quota__c"
+                                        value={editProposal.Max_Quota__c}
+                                        onchange={handleEditProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                        type="datetime"
+                                        label="Start Date"
+                                        name="Start_Date__c"
+                                        value={editProposal.Start_Date__c}
+                                        onchange={handleEditProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                        type="datetime"
+                                        label="End Date"
+                                        name="End_Date__c"
+                                        value={editProposal.End_Date__c}
+                                        onchange={handleEditProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                <lightning-input
+                                        type="date"
+                                        label="Delivery Start Date"
+                                        name="Approximate_Deliver_Start_Date__c"
+                                        value={editProposal.Approximate_Deliver_Start_Date__c}
+                                        onchange={handleEditProposalChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="12" padding="around-small">
+                                <lightning-input-rich-text
+                                        label="Description"
+                                        value={editProposal.Description__c}
+                                        onchange={handleEditProposalChange}
+                                        data-name="Description__c">
+                                </lightning-input-rich-text>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button
+                                label="Cancel"
+                                onclick={handleCloseEditModal}
+                                disabled={isProcessing}>
+                        </lightning-button>
+                        <lightning-button
+                                label="Save Changes"
+                                variant="brand"
+                                onclick={handleSaveProposal}
+                                disabled={isProcessing}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <template lwc:if={showDeleteModal}>
+            <section class="slds-modal slds-fade-in-open slds-modal_small">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header slds-modal__header_empty">
+                        <lightning-button-icon
+                                icon-name="utility:close"
+                                variant="bare-inverse"
+                                class="slds-modal__close"
+                                onclick={handleCloseDeleteModal}>
+                        </lightning-button-icon>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium slds-text-align_center">
+                        <lightning-icon
+                                icon-name="utility:warning"
+                                variant="warning"
+                                size="large"
+                                class="slds-m-bottom_medium">
+                        </lightning-icon>
+                        <h2 class="slds-text-heading_medium slds-m-bottom_small">Delete Proposal?</h2>
+                        <p class="slds-text-body_regular">
+                            Are you sure you want to delete "<strong>{proposalToDelete.Name}</strong>"? This action cannot be undone.
+                        </p>
+                    </div>
+                    <footer class="slds-modal__footer slds-modal__footer_directional">
+                        <lightning-button
+                                label="No, Keep It"
+                                onclick={handleCloseDeleteModal}
+                                disabled={isProcessing}>
+                        </lightning-button>
+                        <lightning-button
+                                label="Yes, Delete"
+                                variant="destructive"
+                                onclick={handleConfirmDelete}
+                                disabled={isProcessing}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>

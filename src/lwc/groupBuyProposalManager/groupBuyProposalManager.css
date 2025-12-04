@@ -1,0 +1,463 @@
+/* Group Buy Proposal Manager Styles */
+
+.proposal-manager-container {
+    font-family: var(--lwc-fontFamily);
+}
+
+/* ================================
+   NOTIFICATION STYLES
+   ================================ */
+.notification {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-success {
+    background-color: #e6f7e9;
+    border: 1px solid #2e844a;
+    color: #2e844a;
+}
+
+.notification-error {
+    background-color: #fef1f1;
+    border: 1px solid #c23934;
+    color: #c23934;
+}
+
+.notification-info {
+    background-color: #e5f2fc;
+    border: 1px solid #0176d3;
+    color: #0176d3;
+}
+
+.notification-message {
+    flex: 1;
+    font-size: 14px;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+}
+
+.notification-close:hover {
+    opacity: 1;
+}
+
+/* ================================
+   LOADING STYLES
+   ================================ */
+.loading-overlay {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+}
+
+/* ================================
+   ACCOUNT BANNER STYLES
+   ================================ */
+.account-banner {
+    background: linear-gradient(135deg, #f4f6f9 0%, #e8ecf1 100%);
+    border-left: 4px solid #0070d2;
+    border-radius: 4px;
+    padding: 12px 16px;
+}
+
+/* ================================
+   SUCCESS VIEW STYLES
+   ================================ */
+.success-view {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success-icon-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #04844b 0%, #2e844a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(4, 132, 75, 0.3);
+}
+
+.success-icon-container lightning-icon {
+    --slds-c-icon-color-foreground-default: white;
+}
+
+.description-content {
+    background-color: #f4f6f9;
+    padding: 12px;
+    border-radius: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* ================================
+   SEARCH RESULTS STYLES
+   ================================ */
+.search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+}
+
+.search-result-item {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+    background-color: #f3f2f2;
+}
+
+.search-result-item:not(:last-child) {
+    border-bottom: 1px solid #dddbda;
+}
+
+/* Scrollbar Styling */
+.search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* ================================
+   SELECTED PRODUCT STYLES
+   ================================ */
+.selected-product {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ================================
+   VALIDATION MESSAGE
+   ================================ */
+.validation-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: #fef1f1;
+    border: 1px solid #c23934;
+    border-radius: 4px;
+    color: #c23934;
+}
+
+/* ================================
+   ACTION BUTTONS
+   ================================ */
+.action-buttons {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #dddbda;
+}
+
+/* ================================
+   EMPTY STATE
+   ================================ */
+.empty-state {
+    padding: 60px 20px;
+}
+
+.empty-state lightning-icon {
+    --slds-c-icon-color-foreground-default: #b0adab;
+}
+
+/* ================================
+   PROPOSALS GRID (MY PROPOSALS TAB)
+   ================================ */
+.proposals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.proposal-card {
+    background: #ffffff;
+    border: 1px solid #dddbda;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.proposal-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.proposal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f4f6f9 0%, #e8ecf1 100%);
+    border-bottom: 1px solid #dddbda;
+}
+
+.proposal-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #181818;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.proposal-card-body {
+    padding: 16px;
+}
+
+.proposal-info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #444444;
+}
+
+.proposal-info-row lightning-icon {
+    flex-shrink: 0;
+}
+
+.proposal-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #dddbda;
+}
+
+/* ================================
+   STATUS BADGES
+   ================================ */
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-created {
+    background-color: #e5e5e5;
+    color: #706e6b;
+}
+
+.status-pending {
+    background-color: #fff8e5;
+    color: #8c6900;
+}
+
+.status-approved {
+    background-color: #e6f7e9;
+    color: #2e844a;
+}
+
+.status-active {
+    background-color: #d4f0f7;
+    color: #0070d2;
+}
+
+.status-rejected {
+    background-color: #fef1f1;
+    color: #c23934;
+}
+
+.status-expired {
+    background-color: #fef1f1;
+    color: #ba0517;
+}
+
+.status-closed {
+    background-color: #e5e5e5;
+    color: #444444;
+}
+
+/* ================================
+   PROGRESS BAR
+   ================================ */
+.progress-section {
+    margin-top: 12px;
+}
+
+.progress-bar-container {
+    height: 6px;
+    background-color: #e8e8e8;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #0176d3;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 11px;
+    color: #706e6b;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.progress-text.goal-reached {
+    color: #2e844a;
+    font-weight: 600;
+}
+
+/* ================================
+   MODAL STYLES
+   ================================ */
+.slds-modal__content {
+    overflow: visible;
+}
+
+.slds-modal_small .slds-modal__container {
+    max-width: 400px;
+}
+
+.slds-modal__footer_directional {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* ================================
+   FORM ELEMENT STYLES
+   ================================ */
+.slds-form-element {
+    margin-bottom: 8px;
+}
+
+.slds-form-element__label {
+    display: block;
+    font-size: 12px;
+    color: #706e6b;
+    font-weight: 400;
+    margin-bottom: 4px;
+}
+
+.slds-form-element__static {
+    font-size: 14px;
+    color: #181818;
+    font-weight: 500;
+}
+
+/* ================================
+   RESPONSIVE ADJUSTMENTS
+   ================================ */
+@media (max-width: 768px) {
+    .proposals-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .search-results {
+        max-height: 200px;
+    }
+
+    .success-icon-container {
+        width: 60px;
+        height: 60px;
+    }
+
+    .proposal-card-footer {
+        flex-wrap: wrap;
+    }
+}
+
+/* ================================
+   PRODUCT SECTIONS
+   ================================ */
+.product-search-section,
+.product-create-section {
+    min-height: 200px;
+}
+
+/* ================================
+   TEXT UTILITIES
+   ================================ */
+.slds-text-title_bold {
+    font-weight: 600;
+    color: #181818;
+}
+
+.slds-text-body_small {
+    font-size: 12px;
+}
+
+/* ================================
+   LISTBOX ITEMS
+   ================================ */
+.slds-listbox__item {
+    list-style: none;
+}
+
+/* ================================
+   MEDIA OBJECT
+   ================================ */
+.slds-media_center {
+    align-items: center;
+}
+
+.slds-media__figure {
+    margin-right: 12px;
+}
