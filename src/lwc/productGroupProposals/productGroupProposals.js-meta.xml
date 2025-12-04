@@ -12,18 +12,10 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightningCommunity__Default">
-            <property name="productId" type="String" label="Product ID" description="The Product2 record ID" />
-            <property name="effectiveAccountId" type="String" label="Account ID" description="The customer Account ID for B2B Commerce" />
-        </targetConfig>
-        <targetConfig targets="lightning__RecordPage">
-            <objects>
-                <object>Product2</object>
-            </objects>
-            <property name="effectiveAccountId" type="String" label="Account ID" description="The customer Account ID" />
+            <property name="productData" type="String" label="Product Data Binding" default="{!Product.Details}" />
         </targetConfig>
         <targetConfig targets="lightning__AppPage">
-            <property name="productId" type="String" label="Product ID" description="The Product2 record ID" />
-            <property name="effectiveAccountId" type="String" label="Account ID" description="The customer Account ID" />
+            <property name="productData" type="String" label="Product Data Binding" default="{!Product.Details}" />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

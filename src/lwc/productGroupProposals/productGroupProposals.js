@@ -1,6 +1,7 @@
-import { LightningElement, api, wire, track } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { CurrentPageReference } from 'lightning/navigation';
+import { LightningElement, api, track } from 'lwc';
+
+// Commerce Context API
+import { getSessionContext } from 'commerce/contextApi';
 
 // Apex methods
 import getProposalsByProduct from '@salesforce/apex/GroupProposalController.getProposalsByProduct';
@@ -10,99 +11,153 @@ import updateConditionalOrder from '@salesforce/apex/GroupProposalController.upd
 import cancelConditionalOrder from '@salesforce/apex/GroupProposalController.cancelConditionalOrder';
 
 export default class ProductGroupProposals extends LightningElement {
-    // Public properties
-    @api recordId; // Product ID from record page
-    @api productId; // Product ID from property
-    @api effectiveAccountId; // Account ID from parent or Experience Builder
+    // Session context
+    _accountId = null;
+    _isPreview = false;
+    _isLoggedIn = false;
+    _contextLoaded = false;
+
+    // Product data
+    _productData;
+    _dataLoaded = false;
+
+    @api
+    get productData() {
+        return this._productData;
+    }
+
+    set productData(value) {
+        this._productData = value;
+        if (value && value.id) {
+            this.tryLoadData();
+        }
+    }
 
     // Tracked state
     @track proposals = [];
     @track existingOrders = {};
-    @track quantities = {}; // Map of proposalId to quantity
-    @track processingProposals = {}; // Map of proposalId to processing state
+    @track quantities = {};
+    @track processingProposals = {};
     @track isLoading = true;
     @track error = null;
 
-    // Modal state
+    // Notification state
+    @track notification = null;
+    notificationTimeout = null;
+
+    // Modify Modal state
     @track showModifyModal = false;
     @track modifyProposalId = null;
     @track modifyQuantity = 1;
     @track modifyMaxQuantity = 1;
     @track isProcessing = false;
 
+    // Cancel Confirmation Modal state
+    @track showCancelModal = false;
+    @track cancelProposalId = null;
+
     // ================================
     // LIFECYCLE
     // ================================
 
-    connectedCallback() {
-        this.loadData();
+    async connectedCallback() {
+        await this.loadSessionContext();
     }
 
-    // ================================
-    // WIRE
-    // ================================
-
-    @wire(CurrentPageReference)
-    handlePageReference(pageRef) {
-        // Try to get productId from URL state
-        if (pageRef && pageRef.state) {
-            if (pageRef.state.productId) {
-                this.productId = pageRef.state.productId;
-                this.loadData();
-            } else if (pageRef.state.recordId) {
-                this.recordId = pageRef.state.recordId;
-                this.loadData();
-            }
+    disconnectedCallback() {
+        if (this.notificationTimeout) {
+            clearTimeout(this.notificationTimeout);
         }
     }
 
     // ================================
-    // DATA LOADING
+    // SESSION CONTEXT
     // ================================
 
-    async loadData() {
-        const prodId = this.recordId || this.productId;
-
-        if (!prodId) {
-            this.isLoading = false;
-            return;
-        }
-
-        this.isLoading = true;
-        this.error = null;
-
+    async loadSessionContext() {
         try {
-            // Load proposals for this product
-            this.proposals = await getProposalsByProduct({ productId: prodId });
+            const ctx = await getSessionContext();
+            console.log('Session Context:', JSON.stringify(ctx));
 
-            // Initialize quantities
-            this.proposals.forEach(p => {
-                if (!this.quantities[p.proposal.Id]) {
-                    this.quantities[p.proposal.Id] = 1;
-                }
-            });
+            this._accountId = ctx.effectiveAccountId;
+            this._isPreview = ctx.isPreview || false;
+            this._isLoggedIn = ctx.isLoggedIn || false;
+            this._contextLoaded = true;
 
-            // Load existing orders if we have account context
-            if (this.effectiveAccountId) {
-                this.existingOrders = await getExistingOrdersForProduct({
-                    productId: prodId,
-                    accountId: this.effectiveAccountId
-                });
-            }
+            this.tryLoadData();
         } catch (err) {
-            console.error('Error loading proposals:', err);
-            this.error = this.reduceErrors(err);
-        } finally {
-            this.isLoading = false;
+            console.error('Error loading session context:', err);
+            this._contextLoaded = true;
+            this.tryLoadData();
         }
     }
 
     // ================================
-    // GETTERS
+    // NOTIFICATION
     // ================================
+
+    showNotification(message, variant = 'success') {
+        if (this.notificationTimeout) {
+            clearTimeout(this.notificationTimeout);
+        }
+
+        this.notification = {
+            message,
+            variant,
+            isSuccess: variant === 'success',
+            isError: variant === 'error',
+            isInfo: variant === 'info'
+        };
+
+        this.notificationTimeout = setTimeout(() => {
+            this.notification = null;
+        }, 5000);
+    }
+
+    handleCloseNotification() {
+        this.notification = null;
+        if (this.notificationTimeout) {
+            clearTimeout(this.notificationTimeout);
+        }
+    }
+
+    get hasNotification() {
+        return !!this.notification;
+    }
+
+    get notificationClass() {
+        if (!this.notification) return '';
+        const base = 'notification';
+        if (this.notification.isSuccess) return `${base} notification-success`;
+        if (this.notification.isError) return `${base} notification-error`;
+        return `${base} notification-info`;
+    }
+
+    get notificationIcon() {
+        if (!this.notification) return 'utility:info';
+        if (this.notification.isSuccess) return 'utility:success';
+        if (this.notification.isError) return 'utility:error';
+        return 'utility:info';
+    }
+
+    // ================================
+    // COMPUTED PROPERTIES
+    // ================================
+
+    get effectiveAccountId() {
+        return this._accountId;
+    }
+
+    get effectiveProductId() {
+        return this._productData?.id;
+    }
+
+    get canInteract() {
+        return this._isLoggedIn;
+    }
 
     get hasProposals() {
-        return !this.isLoading && !this.error && this.proposals && this.proposals.length > 0;
+        return !this.isLoading && !this.error && this.proposals?.length > 0;
     }
 
     get noProposals() {
@@ -119,27 +174,21 @@ export default class ProductGroupProposals extends LightningElement {
             const quantity = this.quantities[propId] || 1;
             const isProcessing = this.processingProposals[propId] || false;
 
-            // Progress calculation
             const booked = proposal.Booked_Quota__c || 0;
             const minQuota = proposal.Min_Quota__c || 0;
             const maxQuota = proposal.Max_Quota__c || 0;
             const available = p.availableQuota || 0;
             const progress = p.progressPercentage || 0;
 
-            // Discount tiers display
-            const discountTiers = (p.discountTiers || []).map(tier => {
-                const isCurrent = tier.Id === p.currentTierId;
-                return {
-                    id: tier.Id,
-                    label: (tier.Discount__c || 0) + '% (' + (tier.Min_Quota_For_Discount__c || 0) + '+)',
-                    tierClass: 'tier-badge' + (isCurrent ? ' tier-current' : '')
-                };
-            });
+            const discountTiers = (p.discountTiers || []).map(tier => ({
+                id: tier.Id,
+                label: `${tier.Discount__c || 0}% (${tier.Min_Quota_For_Discount__c || 0}+)`,
+                tierClass: 'tier-badge' + (tier.Id === p.currentTierId ? ' tier-current' : '')
+            }));
 
-            // Can join check
-            let canJoin = available > 0 && this.effectiveAccountId;
+            let canJoin = available > 0 && this.canInteract;
             let cannotJoinReason = '';
-            if (!this.effectiveAccountId) {
+            if (!this._isLoggedIn) {
                 cannotJoinReason = 'Please log in to join';
             } else if (available <= 0) {
                 cannotJoinReason = 'No spots available';
@@ -154,18 +203,18 @@ export default class ProductGroupProposals extends LightningElement {
                 minQuota: minQuota,
                 maxQuota: maxQuota,
                 availableQuota: available,
-                progressStyle: 'width: ' + Math.min(100, progress) + '%',
-                progressText: Math.round(progress) + '% to goal',
+                progressStyle: `width: ${Math.min(100, progress)}%`,
+                progressText: `${Math.round(progress)}% to goal`,
                 progressClass: progress >= 100 ? 'progress-text goal-reached' : 'progress-text',
                 currentDiscount: p.currentDiscount,
-                currentDiscountFormatted: (p.currentDiscount || 0) + '% OFF',
+                currentDiscountFormatted: `${p.currentDiscount || 0}% OFF`,
                 maxDiscount: p.maxDiscount,
-                maxDiscountFormatted: (p.maxDiscount || 0) + '% OFF',
+                maxDiscountFormatted: `${p.maxDiscount || 0}% OFF`,
                 hasDiscounts: discountTiers.length > 0,
                 discountTiers: discountTiers,
-                hasExistingOrder: existingOrder != null,
-                existingOrderId: existingOrder ? existingOrder.Id : null,
-                existingOrderQty: existingOrder ? existingOrder.Quantity__c : 0,
+                hasExistingOrder: !!existingOrder,
+                existingOrderId: existingOrder?.Id,
+                existingOrderQty: existingOrder?.Quantity__c || 0,
                 canJoin: canJoin && !existingOrder,
                 cannotJoinReason: cannotJoinReason,
                 quantity: quantity,
@@ -175,15 +224,64 @@ export default class ProductGroupProposals extends LightningElement {
     }
 
     // ================================
-    // EVENT HANDLERS - QUANTITY
+    // DATA LOADING
+    // ================================
+
+    tryLoadData() {
+        if (this._contextLoaded && this._productData?.id && !this._dataLoaded) {
+            this.loadData();
+        }
+    }
+
+    async loadData() {
+        const prodId = this.effectiveProductId;
+        if (!prodId) {
+            this.isLoading = false;
+            return;
+        }
+
+        this.isLoading = true;
+        this.error = null;
+        this._dataLoaded = true;
+
+        try {
+            this.proposals = await getProposalsByProduct({ productId: prodId });
+
+            this.proposals.forEach(p => {
+                if (!this.quantities[p.proposal.Id]) {
+                    this.quantities[p.proposal.Id] = 1;
+                }
+            });
+
+            if (this._isLoggedIn) {
+                this.existingOrders = await getExistingOrdersForProduct({
+                    productId: prodId,
+                    accountId: this.effectiveAccountId
+                });
+            }
+        } catch (err) {
+            console.error('Error loading proposals:', err);
+            this.error = this.reduceErrors(err);
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    async reloadData() {
+        this._dataLoaded = false;
+        this.existingOrders = {};
+        await this.loadData();
+    }
+
+    // ================================
+    // QUANTITY HANDLERS
     // ================================
 
     handleQtyChange(event) {
         const proposalId = event.target.dataset.proposalId;
         let val = parseInt(event.target.value, 10);
-
         const proposal = this.proposals.find(p => p.proposal.Id === proposalId);
-        const maxQty = proposal ? proposal.availableQuota : 1;
+        const maxQty = proposal?.availableQuota || 1;
 
         if (isNaN(val) || val < 1) val = 1;
         if (val > maxQty) val = maxQty;
@@ -194,7 +292,7 @@ export default class ProductGroupProposals extends LightningElement {
     handleIncreaseQty(event) {
         const proposalId = event.target.dataset.proposalId;
         const proposal = this.proposals.find(p => p.proposal.Id === proposalId);
-        const maxQty = proposal ? proposal.availableQuota : 1;
+        const maxQty = proposal?.availableQuota || 1;
         const currentQty = this.quantities[proposalId] || 1;
 
         if (currentQty < maxQty) {
@@ -212,19 +310,18 @@ export default class ProductGroupProposals extends LightningElement {
     }
 
     // ================================
-    // EVENT HANDLERS - CONNECT TO GROUP
+    // CONNECT TO GROUP
     // ================================
 
     async handleConnectToGroup(event) {
         const proposalId = event.target.dataset.proposalId;
         const quantity = this.quantities[proposalId] || 1;
 
-        if (!this.effectiveAccountId) {
-            this.showToast('Error', 'Please log in to join', 'error');
+        if (!this.canInteract) {
+            this.showNotification('Please log in to join', 'error');
             return;
         }
 
-        // Set processing state
         this.processingProposals = { ...this.processingProposals, [proposalId]: true };
 
         try {
@@ -235,32 +332,24 @@ export default class ProductGroupProposals extends LightningElement {
             });
 
             if (result.success) {
-                this.showToast('Success', result.message, 'success');
-
-                // Dispatch event
+                this.showNotification(result.message || 'Successfully joined the group!', 'success');
                 this.dispatchEvent(new CustomEvent('orderplaced', {
-                    detail: {
-                        proposalId: proposalId,
-                        orderId: result.order ? result.order.Id : null,
-                        quantity: quantity
-                    }
+                    detail: { proposalId, orderId: result.order?.Id, quantity }
                 }));
-
-                // Reload data
-                await this.loadData();
+                await this.reloadData();
             } else {
-                this.showToast('Error', result.message || 'Failed to join', 'error');
+                this.showNotification(result.message || 'Failed to join', 'error');
             }
         } catch (err) {
             console.error('Error joining group:', err);
-            this.showToast('Error', this.reduceErrors(err), 'error');
+            this.showNotification(this.reduceErrors(err), 'error');
         } finally {
             this.processingProposals = { ...this.processingProposals, [proposalId]: false };
         }
     }
 
     // ================================
-    // EVENT HANDLERS - MODIFY ORDER
+    // MODIFY ORDER
     // ================================
 
     handleModifyOrder(event) {
@@ -303,57 +392,62 @@ export default class ProductGroupProposals extends LightningElement {
             });
 
             if (result.success) {
-                this.showToast('Success', result.message, 'success');
+                this.showNotification(result.message || 'Order updated successfully!', 'success');
                 this.showModifyModal = false;
-                await this.loadData();
+                await this.reloadData();
             } else {
-                this.showToast('Error', result.message || 'Failed to update', 'error');
+                this.showNotification(result.message || 'Failed to update', 'error');
             }
         } catch (err) {
             console.error('Error updating order:', err);
-            this.showToast('Error', this.reduceErrors(err), 'error');
+            this.showNotification(this.reduceErrors(err), 'error');
         } finally {
             this.isProcessing = false;
         }
     }
 
     // ================================
-    // EVENT HANDLERS - CANCEL ORDER
+    // CANCEL ORDER
     // ================================
 
-    async handleCancelOrder(event) {
+    handleCancelOrder(event) {
         const proposalId = event.target.dataset.proposalId;
-        const existingOrder = this.existingOrders[proposalId];
+        this.cancelProposalId = proposalId;
+        this.showCancelModal = true;
+    }
 
+    handleCloseCancelModal() {
+        this.showCancelModal = false;
+        this.cancelProposalId = null;
+    }
+
+    async handleConfirmCancel() {
+        if (!this.cancelProposalId) return;
+
+        const existingOrder = this.existingOrders[this.cancelProposalId];
         if (!existingOrder) return;
 
-        if (!window.confirm('Are you sure you want to cancel your order?')) {
-            return;
-        }
-
-        this.processingProposals = { ...this.processingProposals, [proposalId]: true };
+        this.isProcessing = true;
 
         try {
-            const result = await cancelConditionalOrder({
-                orderId: existingOrder.Id
-            });
+            const result = await cancelConditionalOrder({ orderId: existingOrder.Id });
 
             if (result.success) {
-                this.showToast('Success', result.message, 'success');
-
+                this.showNotification(result.message || 'Order cancelled successfully!', 'success');
                 this.dispatchEvent(new CustomEvent('ordercancelled', {
-                    detail: { proposalId: proposalId, orderId: existingOrder.Id }
+                    detail: { proposalId: this.cancelProposalId, orderId: existingOrder.Id }
                 }));
-
-                await this.loadData();
+                this.showCancelModal = false;
+                this.cancelProposalId = null;
+                await this.reloadData();
             } else {
-                this.showToast('Error', result.message || 'Failed to cancel', 'error');
+                this.showNotification(result.message || 'Failed to cancel', 'error');
             }
         } catch (err) {
             console.error('Error cancelling order:', err);
-            this.showToast('Error', this.reduceErrors(err), 'error');
+            this.showNotification(this.reduceErrors(err), 'error');
         } finally {
-            this.processingProposals = { ...this.processingProposals, [proposalId]: false };
+            this.isProcessing = false;
         }
     }
 
@@ -362,9 +456,8 @@ export default class ProductGroupProposals extends LightningElement {
     // ================================
 
     formatDateTime(dateTimeStr) {
-        if (!dateTimeStr) return null;
-        const d = new Date(dateTimeStr);
-        return d.toLocaleDateString(undefined, {
+        if (!dateTimeStr) return '';
+        return new Date(dateTimeStr).toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
@@ -372,27 +465,15 @@ export default class ProductGroupProposals extends LightningElement {
         });
     }
 
-    showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({
-            title: title,
-            message: message,
-            variant: variant
-        }));
-    }
-
     reduceErrors(error) {
         if (typeof error === 'string') return error;
-        if (error && error.body && error.body.message) return error.body.message;
-        if (error && error.message) return error.message;
+        if (error?.body?.message) return error.body.message;
+        if (error?.message) return error.message;
         return 'An unexpected error occurred';
     }
 
-    // ================================
-    // PUBLIC API
-    // ================================
-
     @api
     refresh() {
-        return this.loadData();
+        return this.reloadData();
     }
 }

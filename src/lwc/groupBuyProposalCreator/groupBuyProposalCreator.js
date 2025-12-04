@@ -80,6 +80,7 @@ export default class GroupBuyProposalCreator extends NavigationMixin(LightningEl
         this.loadPicklistValues();
         try {
             const sessionContext = await getSessionContext();
+            console.log( 'Session Context:', JSON.stringify(sessionContext) );
             this.userId = sessionContext.userId;
             this.accountId = sessionContext.effectiveAccountId;
             this.proposal.Account__c = sessionContext.effectiveAccountId;

@@ -1,226 +1,274 @@
 <template>
-    <!-- Loading State -->
-    <template if:true={isLoading}>
-        <div class="loading-container">
-            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
-        </div>
-    </template>
+    <div class="group-proposals-container">
 
-    <!-- Error State -->
-    <template if:true={error}>
-        <div class="error-container">
-            <lightning-icon icon-name="utility:error" alternative-text="Error" size="small"></lightning-icon>
-            <span class="error-message">{error}</span>
-        </div>
-    </template>
-
-    <!-- Main Content -->
-    <template if:true={hasProposals}>
-        <div class="proposals-container">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <lightning-icon icon-name="utility:groups" size="small"></lightning-icon>
-                    <span>Group Buy Offers</span>
-                </h2>
-                <p class="section-subtitle">Join a group and save more!</p>
+        <!-- Notification -->
+        <template lwc:if={hasNotification}>
+            <div class={notificationClass}>
+                <lightning-icon icon-name={notificationIcon} size="x-small"></lightning-icon>
+                <span class="notification-message">{notification.message}</span>
+                <button class="notification-close" onclick={handleCloseNotification}>
+                    <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                </button>
             </div>
+        </template>
 
-            <!-- Proposals List -->
+        <!-- Loading -->
+        <template lwc:if={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error -->
+        <template lwc:if={error}>
+            <div class="error-message">
+                <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
+                <span>{error}</span>
+            </div>
+        </template>
+
+        <!-- No Proposals -->
+        <template lwc:if={noProposals}>
+            <div class="no-proposals">
+                <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                <span>No group buy proposals available for this product.</span>
+            </div>
+        </template>
+
+        <!-- Proposals List -->
+        <template lwc:if={hasProposals}>
             <div class="proposals-list">
-                <template for:each={proposalsDisplay} for:item="prop">
-                    <div key={prop.id} class="proposal-card">
-                        <!-- Card Header -->
-                        <div class="card-header">
-                            <div class="header-left">
-                                <h3 class="proposal-name">{prop.name}</h3>
-                                <template if:true={prop.endDateFormatted}>
-                                    <span class="end-date">
-                                        <lightning-icon icon-name="utility:clock" size="xx-small"></lightning-icon>
-                                        Ends: {prop.endDateFormatted}
-                                    </span>
-                                </template>
-                            </div>
-                            <div class="header-right">
-                                <div class="max-discount-badge">
-                                    <span class="discount-label">Up to</span>
-                                    <span class="discount-value">{prop.maxDiscountFormatted}</span>
-                                </div>
-                            </div>
+                <template for:each={proposalsDisplay} for:item="proposal">
+                    <div key={proposal.id} class="proposal-card">
+
+                        <!-- Header -->
+                        <div class="proposal-header">
+                            <h3 class="proposal-name">{proposal.name}</h3>
+                            <span class="proposal-type">{proposal.paymentType}</span>
                         </div>
 
-                        <!-- Progress Section -->
-                        <div class="progress-section">
-                            <div class="progress-info">
-                                <span class="booked">{prop.bookedQuota} joined</span>
-                                <span class="goal">Goal: {prop.minQuota}</span>
+                        <!-- Discount Info -->
+                        <div class="discount-section">
+                            <div class="current-discount">
+                                <span class="discount-label">Current Discount:</span>
+                                <span class="discount-value">{proposal.currentDiscountFormatted}</span>
                             </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style={prop.progressStyle}></div>
-                            </div>
-                            <div class="progress-bottom">
-                                <span class={prop.progressClass}>{prop.progressText}</span>
-                                <span class="available">{prop.availableQuota} spots left</span>
-                            </div>
+                            <template lwc:if={proposal.hasDiscounts}>
+                                <div class="max-discount">
+                                    <span class="discount-label">Max Possible:</span>
+                                    <span class="discount-value highlight">{proposal.maxDiscountFormatted}</span>
+                                </div>
+                            </template>
                         </div>
 
                         <!-- Discount Tiers -->
-                        <template if:true={prop.hasDiscounts}>
-                            <div class="tiers-section">
+                        <template lwc:if={proposal.hasDiscounts}>
+                            <div class="discount-tiers">
                                 <span class="tiers-label">Discount Tiers:</span>
-                                <div class="tiers-list">
-                                    <template for:each={prop.discountTiers} for:item="tier">
-                                        <span key={tier.id} class={tier.tierClass}>
-                                            {tier.label}
-                                        </span>
+                                <div class="tiers-container">
+                                    <template for:each={proposal.discountTiers} for:item="tier">
+                                        <span key={tier.id} class={tier.tierClass}>{tier.label}</span>
                                     </template>
                                 </div>
                             </div>
                         </template>
 
-                        <!-- Current Discount Display -->
-                        <template if:true={prop.currentDiscount}>
-                            <div class="current-discount">
-                                <lightning-icon icon-name="utility:discount" size="x-small"></lightning-icon>
-                                <span>Current discount: <strong>{prop.currentDiscountFormatted}</strong></span>
+                        <!-- Progress Bar -->
+                        <div class="progress-section">
+                            <div class="progress-info">
+                                <span>{proposal.bookedQuota} / {proposal.minQuota} min</span>
+                                <span class="max-quota">(max: {proposal.maxQuota})</span>
                             </div>
-                        </template>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style={proposal.progressStyle}></div>
+                            </div>
+                            <div class={proposal.progressClass}>{proposal.progressText}</div>
+                        </div>
 
-                        <!-- Action Section -->
-                        <div class="action-section">
-                            <!-- Already Joined -->
-                            <template if:true={prop.hasExistingOrder}>
+                        <!-- End Date -->
+                        <div class="end-date">
+                            <lightning-icon icon-name="utility:clock" size="xx-small"></lightning-icon>
+                            <span>Ends: {proposal.endDateFormatted}</span>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="proposal-actions">
+
+                            <!-- Existing Order -->
+                            <template lwc:if={proposal.hasExistingOrder}>
                                 <div class="existing-order">
-                                    <div class="order-badge">
-                                        <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
-                                        <span>You're in! Qty: {prop.existingOrderQty}</span>
+                                    <div class="order-info">
+                                        <lightning-icon icon-name="utility:check" size="x-small" variant="success"></lightning-icon>
+                                        <span>You're in! Quantity: <strong>{proposal.existingOrderQty}</strong></span>
                                     </div>
                                     <div class="order-actions">
                                         <lightning-button
                                                 label="Modify"
                                                 variant="neutral"
                                                 size="small"
-                                                data-proposal-id={prop.id}
-                                                onclick={handleModifyOrder}>
+                                                data-proposal-id={proposal.id}
+                                                onclick={handleModifyOrder}
+                                                disabled={proposal.isProcessing}>
                                         </lightning-button>
                                         <lightning-button
                                                 label="Cancel"
                                                 variant="destructive-text"
                                                 size="small"
-                                                data-proposal-id={prop.id}
-                                                onclick={handleCancelOrder}>
+                                                data-proposal-id={proposal.id}
+                                                onclick={handleCancelOrder}
+                                                disabled={proposal.isProcessing}>
                                         </lightning-button>
                                     </div>
                                 </div>
                             </template>
 
                             <!-- Join Form -->
-                            <template if:false={prop.hasExistingOrder}>
-                                <template if:true={prop.canJoin}>
-                                    <div class="join-form">
-                                        <div class="quantity-row">
-                                            <label class="qty-label">Quantity:</label>
-                                            <div class="qty-controls">
-                                                <lightning-button-icon
-                                                        icon-name="utility:dash"
-                                                        alternative-text="Decrease"
-                                                        size="small"
-                                                        data-proposal-id={prop.id}
-                                                        onclick={handleDecreaseQty}>
-                                                </lightning-button-icon>
-                                                <input
-                                                        type="number"
-                                                        class="qty-input"
-                                                        value={prop.quantity}
-                                                        min="1"
-                                                        max={prop.availableQuota}
-                                                        data-proposal-id={prop.id}
-                                                        onchange={handleQtyChange} />
-                                                <lightning-button-icon
-                                                        icon-name="utility:add"
-                                                        alternative-text="Increase"
-                                                        size="small"
-                                                        data-proposal-id={prop.id}
-                                                        onclick={handleIncreaseQty}>
-                                                </lightning-button-icon>
-                                            </div>
+                            <template lwc:elseif={proposal.canJoin}>
+                                <div class="join-form">
+                                    <div class="quantity-selector">
+                                        <label class="qty-label">Quantity:</label>
+                                        <div class="qty-controls">
+                                            <lightning-button-icon
+                                                    icon-name="utility:dash"
+                                                    variant="border"
+                                                    size="small"
+                                                    data-proposal-id={proposal.id}
+                                                    onclick={handleDecreaseQty}
+                                                    disabled={proposal.isProcessing}>
+                                            </lightning-button-icon>
+                                            <input
+                                                    type="number"
+                                                    class="qty-input"
+                                                    value={proposal.quantity}
+                                                    min="1"
+                                                    max={proposal.availableQuota}
+                                                    data-proposal-id={proposal.id}
+                                                    onchange={handleQtyChange}
+                                                    disabled={proposal.isProcessing}>
+                                            <lightning-button-icon
+                                                    icon-name="utility:add"
+                                                    variant="border"
+                                                    size="small"
+                                                    data-proposal-id={proposal.id}
+                                                    onclick={handleIncreaseQty}
+                                                    disabled={proposal.isProcessing}>
+                                            </lightning-button-icon>
                                         </div>
-                                        <lightning-button
-                                                label="Connect To Group"
-                                                variant="brand"
-                                                data-proposal-id={prop.id}
-                                                onclick={handleConnectToGroup}
-                                                disabled={prop.isProcessing}
-                                                class="connect-btn">
-                                        </lightning-button>
+                                        <span class="available-text">({proposal.availableQuota} available)</span>
                                     </div>
-                                </template>
-                                <template if:false={prop.canJoin}>
-                                    <div class="cannot-join">
-                                        <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
-                                        <span>{prop.cannotJoinReason}</span>
-                                    </div>
-                                </template>
+                                    <lightning-button
+                                            label="Connect To Group"
+                                            variant="brand"
+                                            data-proposal-id={proposal.id}
+                                            onclick={handleConnectToGroup}
+                                            disabled={proposal.isProcessing}>
+                                    </lightning-button>
+                                </div>
                             </template>
-                        </div>
 
-                        <!-- Payment Type -->
-                        <div class="payment-type">
-                            <lightning-icon icon-name="utility:money" size="xx-small"></lightning-icon>
-                            <span>{prop.paymentType}</span>
+                            <!-- Cannot Join -->
+                            <template lwc:else>
+                                <div class="cannot-join">
+                                    <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                                    <span>{proposal.cannotJoinReason}</span>
+                                </div>
+                            </template>
+
+                            <!-- Processing Spinner -->
+                            <template lwc:if={proposal.isProcessing}>
+                                <lightning-spinner alternative-text="Processing..." size="small" class="action-spinner"></lightning-spinner>
+                            </template>
                         </div>
                     </div>
                 </template>
             </div>
-        </div>
-    </template>
+        </template>
 
-    <!-- No Proposals -->
-    <template if:true={noProposals}>
-        <div class="no-proposals">
-            <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
-            <span>No group buy offers available for this product at the moment.</span>
-        </div>
-    </template>
-
-    <!-- Modify Order Modal -->
-    <template if:true={showModifyModal}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
-            <div class="slds-modal__container">
-                <header class="slds-modal__header">
-                    <lightning-button-icon
-                            icon-name="utility:close"
-                            alternative-text="Close"
-                            class="slds-modal__close"
-                            onclick={handleCloseModifyModal}>
-                    </lightning-button-icon>
-                    <h2 class="slds-modal__title">Modify Your Order</h2>
-                </header>
-                <div class="slds-modal__content slds-p-around_medium">
-                    <lightning-input
-                            type="number"
-                            label="New Quantity"
-                            value={modifyQuantity}
-                            min="1"
-                            max={modifyMaxQuantity}
-                            onchange={handleModifyQtyChange}
-                            required>
-                    </lightning-input>
-                    <p class="modal-hint">Maximum available: {modifyMaxQuantity}</p>
+        <!-- Modify Order Modal -->
+        <template lwc:if={showModifyModal}>
+            <section class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <lightning-button-icon
+                                icon-name="utility:close"
+                                variant="bare-inverse"
+                                class="slds-modal__close"
+                                onclick={handleCloseModifyModal}>
+                        </lightning-button-icon>
+                        <h2 class="slds-modal__title">Modify Order</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-input
+                                type="number"
+                                label="Quantity"
+                                value={modifyQuantity}
+                                min="1"
+                                max={modifyMaxQuantity}
+                                onchange={handleModifyQtyChange}
+                                disabled={isProcessing}>
+                        </lightning-input>
+                        <p class="slds-text-body_small slds-m-top_x-small">
+                            Maximum: {modifyMaxQuantity}
+                        </p>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button
+                                label="Cancel"
+                                onclick={handleCloseModifyModal}
+                                disabled={isProcessing}>
+                        </lightning-button>
+                        <lightning-button
+                                label="Update"
+                                variant="brand"
+                                onclick={handleUpdateOrder}
+                                disabled={isProcessing}>
+                        </lightning-button>
+                    </footer>
                 </div>
-                <footer class="slds-modal__footer">
-                    <lightning-button
-                            label="Cancel"
-                            onclick={handleCloseModifyModal}>
-                    </lightning-button>
-                    <lightning-button
-                            label="Update Order"
-                            variant="brand"
-                            onclick={handleUpdateOrder}
-                            disabled={isProcessing}>
-                    </lightning-button>
-                </footer>
-            </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
-    </template>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- Cancel Confirmation Modal -->
+        <template lwc:if={showCancelModal}>
+            <section class="slds-modal slds-fade-in-open slds-modal_small">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header slds-modal__header_empty">
+                        <lightning-button-icon
+                                icon-name="utility:close"
+                                variant="bare-inverse"
+                                class="slds-modal__close"
+                                onclick={handleCloseCancelModal}>
+                        </lightning-button-icon>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium slds-text-align_center">
+                        <lightning-icon
+                                icon-name="utility:warning"
+                                variant="warning"
+                                size="large"
+                                class="slds-m-bottom_medium">
+                        </lightning-icon>
+                        <h2 class="slds-text-heading_medium slds-m-bottom_small">Cancel Order?</h2>
+                        <p class="slds-text-body_regular">
+                            Are you sure you want to cancel your order? This action cannot be undone.
+                        </p>
+                    </div>
+                    <footer class="slds-modal__footer slds-modal__footer_directional">
+                        <lightning-button
+                                label="No, Keep Order"
+                                onclick={handleCloseCancelModal}
+                                disabled={isProcessing}>
+                        </lightning-button>
+                        <lightning-button
+                                label="Yes, Cancel Order"
+                                variant="destructive"
+                                onclick={handleConfirmCancel}
+                                disabled={isProcessing}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
 </template>

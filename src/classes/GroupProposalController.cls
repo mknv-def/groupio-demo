@@ -92,7 +92,7 @@ public with sharing class GroupProposalController {
      * @param productId The Product2 Id
      * @return List of ProposalWithDiscounts containing proposal and discount tiers
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<ProposalWithDiscounts> getProposalsByProduct(Id productId) {
         if (productId == null) {
             return new List<ProposalWithDiscounts>();
@@ -189,27 +189,38 @@ public with sharing class GroupProposalController {
      * @param accountId The Account Id
      * @return Map of proposalId to Conditional_Order__c
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static Map<Id, Conditional_Order__c> getExistingOrdersForProduct(Id productId, Id accountId) {
-        Map<Id, Conditional_Order__c> orderMap = new Map<Id, Conditional_Order__c>();
+        Map<Id, Conditional_Order__c> result = new Map<Id, Conditional_Order__c>();
 
-        if (productId == null || accountId == null) {
-            return orderMap;
+        List<Conditional_Order__c> orders;
+
+        if (accountId != null) {
+            // Production: query by account
+            orders = [
+                    SELECT Id, Group_Buy_Proposal__c, Quantity__c, Status__c
+                    FROM Conditional_Order__c
+                    WHERE Product__c = :productId
+                    AND Account__c = :accountId
+                    AND Status__c IN ('Pending', 'Confirmed')
+            ];
+        } else {
+            // Preview mode: query by created user
+            orders = [
+                    SELECT Id, Group_Buy_Proposal__c, Quantity__c, Status__c
+                    FROM Conditional_Order__c
+                    WHERE Product__c = :productId
+                    AND CreatedById = :UserInfo.getUserId()
+                    AND Account__c = null
+                    AND Status__c IN ('Pending', 'Confirmed')
+            ];
         }
 
-        List<Conditional_Order__c> orders = [
-                SELECT Id, Name, Quantity__c, Subscription_Last_Date__c,
-                        Group_Buy_Proposal__c, Product__c
-                FROM Conditional_Order__c
-                WHERE Product__c = :productId
-                AND Account__c = :accountId
-        ];
-
-        for (Conditional_Order__c o : orders) {
-            orderMap.put(o.Group_Buy_Proposal__c, o);
+        for (Conditional_Order__c order : orders) {
+            result.put(order.Group_Buy_Proposal__c, order);
         }
 
-        return orderMap;
+        return result;
     }
 
     /**
@@ -312,9 +323,6 @@ public with sharing class GroupProposalController {
         // Validate inputs
         if (proposalId == null) {
             throw new AuraHandledException('Proposal ID is required');
-        }
-        if (accountId == null) {
-            throw new AuraHandledException('Account ID is required');
         }
         if (quantity == null || quantity <= 0) {
             throw new AuraHandledException('Quantity must be greater than zero');
