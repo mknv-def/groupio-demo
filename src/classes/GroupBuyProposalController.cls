@@ -129,7 +129,7 @@ public with sharing class GroupBuyProposalController {
     // ACCOUNT METHODS
     // ==========================================
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<Account> searchAccounts(String searchTerm) {
         if (String.isBlank(searchTerm) || searchTerm.length() < 2) return new List<Account>();
         String searchKey = '%' + String.escapeSingleQuotes(searchTerm) + '%';
@@ -143,7 +143,7 @@ public with sharing class GroupBuyProposalController {
         return accounts.isEmpty() ? null : accounts[0];
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<Group_Buy_Proposal__c> getMyProposals(Id accountId) {
         if (accountId != null) {
             return [
@@ -182,7 +182,7 @@ public with sharing class GroupBuyProposalController {
     /**
      * Get single proposal by Id
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static Group_Buy_Proposal__c getProposalById(Id proposalId) {
         return [
                 SELECT Id, Name, Status__c, Type__c, Base_Price__c,

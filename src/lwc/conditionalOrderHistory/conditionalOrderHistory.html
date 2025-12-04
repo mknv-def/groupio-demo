@@ -1,0 +1,306 @@
+<template>
+    <div class="order-history-container">
+        <div class="history-header">
+            <div class="header-title">
+                <lightning-icon icon-name="standard:orders" size="medium"></lightning-icon>
+                <h2>My Group Buy Orders</h2>
+            </div>
+            <lightning-button
+                    label="Refresh"
+                    icon-name="utility:refresh"
+                    onclick={handleRefresh}>
+            </lightning-button>
+        </div>
+
+        <template lwc:if={hasNotification}>
+            <div class={notificationClass}>
+                <lightning-icon icon-name={notificationIcon} size="x-small"></lightning-icon>
+                <span class="notification-message">{notification.message}</span>
+                <button class="notification-close" onclick={handleCloseNotification}>
+                    <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                </button>
+            </div>
+        </template>
+
+        <template lwc:if={errorMsg}>
+            <div class="error-banner">
+                <lightning-icon icon-name="utility:error" variant="error" size="small"></lightning-icon>
+                <span>{errorMsg}</span>
+            </div>
+        </template>
+
+        <template lwc:if={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Loading orders..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:if={noOrders}>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <lightning-icon icon-name="utility:shopping_bag" size="large"></lightning-icon>
+                </div>
+                <h3>No Orders Yet</h3>
+                <p>You haven't placed any group buy orders. Browse active proposals to get started!</p>
+            </div>
+        </template>
+
+        <template lwc:if={hasOrders}>
+            <div class="order-groups">
+                <template for:each={orderGroups} for:item="group">
+                    <div key={group.key} class="order-group">
+                        <div class="group-header" data-id={group.key} onclick={handleToggleGroup}>
+                            <div class="group-header-left">
+                                <lightning-icon
+                                        icon-name={group.iconName}
+                                size="x-small">
+                                </lightning-icon>
+                                <div class="proposal-info">
+                                    <h3 class="proposal-name">{group.proposal.Name}</h3>
+                                    <div class="proposal-meta">
+                                        <span class="product-name">
+                                            <lightning-icon icon-name="standard:product" size="xx-small"></lightning-icon>
+                                            {group.proposal.productName}
+                                        </span>
+                                        <span class={group.proposal.statusClass}>{group.proposal.Status__c}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="group-header-right">
+                                <div class="order-summary">
+                                    <span class="summary-item">
+                                        <strong>{group.orderCount}</strong> order(s)
+                                    </span>
+                                    <span class="summary-item">
+                                        <strong>{group.totalQuantity}</strong> units total
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <template lwc:if={group.isExpanded}>
+                            <div class="group-content">
+                                <div class="proposal-details-row">
+                                    <div class="detail-card">
+                                        <span class="detail-label">Base Price</span>
+                                        <span class="detail-value price">{group.proposal.basePriceFormatted}</span>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="detail-label">Progress</span>
+                                        <div class="progress-mini">
+                                            <div class="progress-bar-mini">
+                                                <div class="progress-fill-mini" style={group.proposal.progressStyle}></div>
+                                            </div>
+                                            <span class="progress-text-mini">{group.proposal.progressPercent}%</span>
+                                        </div>
+                                        <span class="detail-subtext">{group.proposal.bookedQuota} / {group.proposal.Min_Quota__c} min</span>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="detail-label">Period</span>
+                                        <span class="detail-value">{group.proposal.startDateFormatted}</span>
+                                        <span class="detail-subtext">to {group.proposal.endDateFormatted}</span>
+                                    </div>
+                                    <template lwc:if={group.currentDiscount}>
+                                        <div class="detail-card highlight">
+                                            <span class="detail-label">Current Discount</span>
+                                            <span class="detail-value discount">{group.currentDiscount.percent}% OFF</span>
+                                            <span class="detail-subtext">at {group.proposal.bookedQuota} units</span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <template lwc:if={group.hasDiscounts}>
+                                    <div class="discount-section">
+                                        <h4 class="section-subtitle">Volume Discount Tiers</h4>
+                                        <div class="discount-tiers">
+                                            <template for:each={group.discounts} for:item="discount">
+                                                <div key={discount.Id} class={discount.cssClass}>
+                                                    <div class="tier-range">{discount.rangeText} units</div>
+                                                    <div class="tier-discount">{discount.discountPercent}%</div>
+                                                    <template lwc:if={discount.isCurrent}>
+                                                        <span class="current-badge">ACTIVE</span>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div class="orders-section">
+                                    <h4 class="section-subtitle">Your Orders</h4>
+                                    <table class="orders-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Order Date</th>
+                                            <th>Quantity</th>
+                                            <th>Unit Price</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <template for:each={group.orders} for:item="order">
+                                            <tr key={order.Id} class="order-row">
+                                                <td>{order.formattedDate}</td>
+                                                <td class="quantity-cell">
+                                                    <strong>{order.Quantity__c}</strong>
+                                                </td>
+                                                <td class="price-cell">
+                                                    <template lwc:if={order.discountedUnitPrice}>
+                                                        <span class="original-price">{order.unitPrice}</span>
+                                                        <span class="discounted-price">{order.discountedUnitPrice}</span>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span>{order.unitPrice}</span>
+                                                    </template>
+                                                </td>
+                                                <td class="price-cell">
+                                                    <template lwc:if={order.discountedTotalPrice}>
+                                                        <span class="original-price">{order.totalPrice}</span>
+                                                        <span class="discounted-price">{order.discountedTotalPrice}</span>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span>{order.totalPrice}</span>
+                                                    </template>
+                                                </td>
+                                                <td>
+                                                    <span class={order.statusClass}>{order.Status__c}</span>
+                                                </td>
+                                                <td class="actions-cell">
+                                                    <template lwc:if={order.canEdit}>
+                                                        <lightning-button-icon
+                                                                icon-name="utility:edit"
+                                                                alternative-text="Edit Quantity"
+                                                                title="Edit Quantity"
+                                                                variant="border-filled"
+                                                                data-id={order.Id}
+                                                                onclick={handleEditOrder}>
+                                                        </lightning-button-icon>
+                                                    </template>
+                                                    <template lwc:if={order.canCancel}>
+                                                        <lightning-button-icon
+                                                                icon-name="utility:delete"
+                                                                alternative-text="Cancel Order"
+                                                                title="Cancel Order"
+                                                                variant="border-filled"
+                                                                data-id={order.Id}
+                                                                onclick={handleCancelOrder}>
+                                                        </lightning-button-icon>
+                                                    </template>
+
+                                                    <template lwc:if={order.isConfirmed}>
+                                                        <span class="no-actions">Order confirmed</span>
+                                                    </template>
+                                                    <template lwc:if={order.isCancelled}>
+                                                        <span class="no-actions">Cancelled</span>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <template lwc:if={showEditModal}>
+            <section class="slds-modal slds-fade-in-open slds-modal_small">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <lightning-button-icon
+                                icon-name="utility:close"
+                                variant="bare-inverse"
+                                alternative-text="Close"
+                                class="slds-modal__close"
+                                onclick={handleCloseEditModal}>
+                        </lightning-button-icon>
+                        <h2 class="slds-modal__title">Edit Order Quantity</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_large">
+                        <div class="edit-form">
+                            <p class="edit-info">
+                                Current quantity: <strong>{editingOrder.Quantity__c}</strong> units
+                            </p>
+                            <lightning-input
+                                    type="number"
+                                    label="New Quantity"
+                                    value={editQuantity}
+                                    min="1"
+                                    onchange={handleQuantityChange}
+                                    required>
+                            </lightning-input>
+                        </div>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button
+                                label="Cancel"
+                                onclick={handleCloseEditModal}
+                                disabled={isSaving}>
+                        </lightning-button>
+                        <lightning-button
+                                label="Save Changes"
+                                variant="brand"
+                                onclick={handleSaveQuantity}
+                                disabled={isSaving}>
+                            <template lwc:if={isSaving}>
+                                <lightning-spinner alternative-text="Saving..." size="small"></lightning-spinner>
+                            </template>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <template lwc:if={showCancelModal}>
+            <section class="slds-modal slds-fade-in-open slds-modal_small">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header slds-modal__header_empty">
+                        <lightning-button-icon
+                                icon-name="utility:close"
+                                variant="bare-inverse"
+                                alternative-text="Close"
+                                class="slds-modal__close"
+                                onclick={handleCloseCancelModal}>
+                        </lightning-button-icon>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_large slds-text-align_center">
+                        <div class="cancel-icon">
+                            <lightning-icon icon-name="utility:warning" variant="warning" size="large"></lightning-icon>
+                        </div>
+                        <h2 class="slds-text-heading_medium slds-m-top_medium slds-m-bottom_small">
+                            Cancel This Order?
+                        </h2>
+                        <p class="slds-text-body_regular slds-text-color_weak">
+                            Are you sure you want to cancel your order for
+                            <strong>{cancellingOrder.Quantity__c}</strong> unit(s)?<br/>
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                    <footer class="slds-modal__footer slds-modal__footer_directional">
+                        <lightning-button
+                                label="Keep Order"
+                                onclick={handleCloseCancelModal}
+                                disabled={isCancelling}>
+                        </lightning-button>
+                        <lightning-button
+                                label="Yes, Cancel Order"
+                                variant="destructive"
+                                onclick={handleConfirmCancel}
+                                disabled={isCancelling}>
+                            <template lwc:if={isCancelling}>
+                                <lightning-spinner alternative-text="Cancelling..." size="small"></lightning-spinner>
+                            </template>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>

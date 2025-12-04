@@ -9,7 +9,7 @@ public with sharing class GroupProposalController {
      * @param proposalId The Group_Buy_Proposal__c Id
      * @return ProposalDetails wrapper with all relevant information
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static ProposalDetails getProposalDetails(Id proposalId) {
         if (proposalId == null) {
             throw new AuraHandledException('Proposal ID is required');
@@ -229,7 +229,7 @@ public with sharing class GroupProposalController {
      * @param productId Optional Product Id to filter
      * @return List of active proposals
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<ProposalSummary> getAvailableProposals(Id accountId, Id productId) {
         List<ProposalSummary> summaries = new List<ProposalSummary>();
 
@@ -287,7 +287,7 @@ public with sharing class GroupProposalController {
      * @param accountId The Account Id
      * @return Existing conditional order if found
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static Conditional_Order__c getExistingOrder(Id proposalId, Id accountId) {
         if (proposalId == null || accountId == null) {
             return null;
@@ -357,6 +357,7 @@ public with sharing class GroupProposalController {
         Decimal bookedQty = proposal.Booked_Quota__c != null ? proposal.Booked_Quota__c : 0;
         Decimal maxQty = proposal.Max_Quota__c != null ? proposal.Max_Quota__c : 999999999;
         Decimal availableQty = maxQty - bookedQty;
+        Decimal unitPrice = proposal.Base_Price__c;
 
         if (proposal.Is_Quota_Exceeded__c || availableQty <= 0) {
             throw new AuraHandledException('This proposal has reached its maximum quota');
@@ -386,7 +387,9 @@ public with sharing class GroupProposalController {
             order.Account__c = accountId;
             order.Product__c = proposal.Product__c;
             order.Quantity__c = quantity;
-            order.Subscription_Last_Date__c = DateTime.now();
+            order.Subscription_Last_Date__c = proposal.End_Date__c;
+            order.Unit_Price__c = unitPrice;
+
 
             insert order;
 
