@@ -143,75 +143,181 @@ public with sharing class GroupBuyProposalController {
         return accounts.isEmpty() ? null : accounts[0];
     }
 
-    // ==========================================
-    // *** MISSING METHODS ADDED BELOW ***
-    // ==========================================
-
-    /**
-     * @description Fetch proposals for the "My Proposals" tab
-     * @param accountId The effective account ID of the user
-     * @return List of Group_Buy_Proposal__c
-     */
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static List<Group_Buy_Proposal__c> getMyProposals(Id accountId) {
-        try {
-            // Note: Added Progress_Percentage__c based on your LWC usage.
-            // Ensure this field exists on your object.
+        if (accountId != null) {
             return [
-                    SELECT Id, Name, Description__c, Status__c, Type__c,
-                            Min_Quota__c, Max_Quota__c, Start_Date__c, End_Date__c,
-                            Base_Price__c, Approximate_Deliver_Start_Date__c,
-                            Progress_Percentage__c,
-                            Product__c, Product__r.Name
+                    SELECT Id, Name, Status__c, Type__c, Base_Price__c,
+                            Min_Quota__c, Max_Quota__c, Booked_Quota__c,
+                            Available_Quota__c, Progress_Percentage__c,
+                            Start_Date__c, End_Date__c, Approximate_Deliver_Start_Date__c,
+                            Description__c, Is_Min_Quota_Reached__c,
+                            Product__c, Product__r.Name, Product__r.ProductCode,
+                            Account__c, Account__r.Name,
+                            CreatedDate, LastModifiedDate
                     FROM Group_Buy_Proposal__c
-                    WHERE Account__c = :accountId OR CreatedById = :UserInfo.getUserId()
+                    WHERE Account__c = :accountId
                     ORDER BY CreatedDate DESC
+                    LIMIT 100
             ];
-        } catch (Exception e) {
-            throw new AuraHandledException('Error fetching proposals: ' + e.getMessage());
+        } else {
+            // For preview mode - get proposals created by current user without account
+            return [
+                    SELECT Id, Name, Status__c, Type__c, Base_Price__c,
+                            Min_Quota__c, Max_Quota__c, Booked_Quota__c,
+                            Available_Quota__c, Progress_Percentage__c,
+                            Start_Date__c, End_Date__c, Approximate_Deliver_Start_Date__c,
+                            Description__c, Is_Min_Quota_Reached__c,
+                            Product__c, Product__r.Name, Product__r.ProductCode,
+                            Account__c, Account__r.Name,
+                            CreatedDate, LastModifiedDate
+                    FROM Group_Buy_Proposal__c
+                    WHERE CreatedById = :UserInfo.getUserId()
+                    AND Account__c = null
+                    ORDER BY CreatedDate DESC
+                    LIMIT 100
+            ];
         }
     }
 
     /**
-     * @description Update an existing proposal
-     * @param proposalData JSON string containing fields to update
-     * @return Updated Group_Buy_Proposal__c record
+     * Get single proposal by Id
+     */
+    @AuraEnabled(cacheable=true)
+    public static Group_Buy_Proposal__c getProposalById(Id proposalId) {
+        return [
+                SELECT Id, Name, Status__c, Type__c, Base_Price__c,
+                        Min_Quota__c, Max_Quota__c, Booked_Quota__c,
+                        Available_Quota__c, Progress_Percentage__c,
+                        Start_Date__c, End_Date__c, Approximate_Deliver_Start_Date__c,
+                        Description__c, Is_Min_Quota_Reached__c,
+                        Product__c, Product__r.Name, Product__r.ProductCode,
+                        Account__c, Account__r.Name,
+                        CreatedDate, LastModifiedDate
+                FROM Group_Buy_Proposal__c
+                WHERE Id = :proposalId
+                LIMIT 1
+        ];
+    }
+
+    /**
+     * Update an existing proposal
      */
     @AuraEnabled
     public static Group_Buy_Proposal__c updateProposal(String proposalData) {
         try {
             Map<String, Object> proposalMap = (Map<String, Object>) JSON.deserializeUntyped(proposalData);
 
-            String proposalId = (String) proposalMap.get('Id');
-            if (String.isBlank(proposalId)) {
-                throw new AuraHandledException('Proposal ID is missing for update.');
+            Id proposalId = (Id) proposalMap.get('Id');
+            if (proposalId == null) {
+                throw new AuraHandledException('Proposal ID is required for update');
             }
 
+            // Build update record
             Group_Buy_Proposal__c proposalToUpdate = new Group_Buy_Proposal__c(Id = proposalId);
-            proposalToUpdate = mapJsonToProposal(proposalMap, proposalToUpdate);
+
+            if (proposalMap.containsKey('Name')) {
+                proposalToUpdate.Name = (String) proposalMap.get('Name');
+            }
+            if (proposalMap.containsKey('Status__c')) {
+                proposalToUpdate.Status__c = (String) proposalMap.get('Status__c');
+            }
+            if (proposalMap.containsKey('Type__c')) {
+                proposalToUpdate.Type__c = (String) proposalMap.get('Type__c');
+            }
+            if (proposalMap.containsKey('Description__c')) {
+                proposalToUpdate.Description__c = (String) proposalMap.get('Description__c');
+            }
+            if (proposalMap.containsKey('Min_Quota__c')) {
+                Object minQuota = proposalMap.get('Min_Quota__c');
+                proposalToUpdate.Min_Quota__c = minQuota != null ? Decimal.valueOf(String.valueOf(minQuota)) : null;
+            }
+            if (proposalMap.containsKey('Max_Quota__c')) {
+                Object maxQuota = proposalMap.get('Max_Quota__c');
+                proposalToUpdate.Max_Quota__c = maxQuota != null ? Decimal.valueOf(String.valueOf(maxQuota)) : null;
+            }
+            if (proposalMap.containsKey('Base_Price__c')) {
+                Object basePrice = proposalMap.get('Base_Price__c');
+                proposalToUpdate.Base_Price__c = basePrice != null ? Decimal.valueOf(String.valueOf(basePrice)) : null;
+            }
+            if (proposalMap.containsKey('Start_Date__c')) {
+                String startDateStr = (String) proposalMap.get('Start_Date__c');
+                if (String.isNotBlank(startDateStr)) {
+                    proposalToUpdate.Start_Date__c = DateTime.valueOf(startDateStr.replace('T', ' ').replace('Z', ''));
+                }
+            }
+            if (proposalMap.containsKey('End_Date__c')) {
+                String endDateStr = (String) proposalMap.get('End_Date__c');
+                if (String.isNotBlank(endDateStr)) {
+                    proposalToUpdate.End_Date__c = DateTime.valueOf(endDateStr.replace('T', ' ').replace('Z', ''));
+                }
+            }
+            if (proposalMap.containsKey('Approximate_Deliver_Start_Date__c')) {
+                String deliveryDateStr = (String) proposalMap.get('Approximate_Deliver_Start_Date__c');
+                if (String.isNotBlank(deliveryDateStr)) {
+                    proposalToUpdate.Approximate_Deliver_Start_Date__c = Date.valueOf(deliveryDateStr);
+                }
+            }
 
             update proposalToUpdate;
 
-            return getProposalById(proposalToUpdate.Id);
+            // Return updated record
+            return getProposalById(proposalId);
+
         } catch (Exception e) {
             throw new AuraHandledException('Error updating proposal: ' + e.getMessage());
         }
     }
 
     /**
-     * @description Delete a proposal
-     * @param proposalId The ID of the proposal to delete
+     * Delete a proposal
      */
     @AuraEnabled
     public static void deleteProposal(Id proposalId) {
         try {
-            if (proposalId != null) {
-                delete new Group_Buy_Proposal__c(Id = proposalId);
+            if (proposalId == null) {
+                throw new AuraHandledException('Proposal ID is required');
             }
+
+            // Fetch proposal to verify it can be deleted
+            Group_Buy_Proposal__c proposal = [
+                    SELECT Id, Status__c, Booked_Quota__c
+                    FROM Group_Buy_Proposal__c
+                    WHERE Id = :proposalId
+                    LIMIT 1
+            ];
+
+            // Only allow deletion of proposals in certain statuses
+            Set<String> deletableStatuses = new Set<String>{'Created', 'Rejected'};
+            if (!deletableStatuses.contains(proposal.Status__c)) {
+                throw new AuraHandledException('Cannot delete proposal with status: ' + proposal.Status__c);
+            }
+
+            // Check if there are any conditional orders
+            if (proposal.Booked_Quota__c != null && proposal.Booked_Quota__c > 0) {
+                throw new AuraHandledException('Cannot delete proposal with existing orders');
+            }
+
+            // Delete related discount tiers first
+            List<Group_Proposal_Discount__c> discounts = [
+                    SELECT Id
+                    FROM Group_Proposal_Discount__c
+                    WHERE Group_Buy_Proposal__c = :proposalId
+            ];
+            if (!discounts.isEmpty()) {
+                delete discounts;
+            }
+
+            // Delete the proposal
+            delete proposal;
+
+        } catch (AuraHandledException e) {
+            throw e;
         } catch (Exception e) {
             throw new AuraHandledException('Error deleting proposal: ' + e.getMessage());
         }
     }
+
 
     // ==========================================
     // HELPER METHODS
@@ -251,21 +357,6 @@ public with sharing class GroupBuyProposalController {
         if (mapData.get('Account__c') != null) proposal.Account__c = (Id) mapData.get('Account__c');
 
         return proposal;
-    }
-
-    /**
-     * @description Helper to get single proposal with lookups
-     */
-    private static Group_Buy_Proposal__c getProposalById(Id proposalId) {
-        return [
-                SELECT Id, Name, Description__c, Status__c, Type__c,
-                        Min_Quota__c, Max_Quota__c, Start_Date__c, End_Date__c,
-                        Approximate_Deliver_Start_Date__c, Product__c, Product__r.Name,
-                        Account__c, Account__r.Name
-                FROM Group_Buy_Proposal__c
-                WHERE Id = :proposalId
-                LIMIT 1
-        ];
     }
 
     private static List<PicklistOption> getPicklistValues(Schema.DescribeFieldResult fieldDescribe) {

@@ -1,0 +1,164 @@
+<template>
+    <section class="slds-modal slds-fade-in-open slds-modal_large">
+        <div class="slds-modal__container">
+            <!-- Header -->
+            <header class="slds-modal__header">
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    variant="bare-inverse"
+                    alternative-text="Close"
+                    class="slds-modal__close"
+                    onclick={handleClose}>
+                </lightning-button-icon>
+                <h2 class="slds-modal__title">{proposalName}</h2>
+            </header>
+
+            <!-- Content -->
+            <div class="slds-modal__content">
+                <lightning-tabset active-tab-value={activeTab}>
+                    
+                    <!-- Details Tab -->
+                    <lightning-tab label="Details" value="details">
+                        <div class="detail-content">
+                            <!-- Status Header -->
+                            <div class="status-header">
+                                <span class={statusClass}>{proposal.Status__c}</span>
+                                <span class="proposal-type">{proposal.Type__c}</span>
+                            </div>
+
+                            <!-- Progress Section -->
+                            <div class="progress-section">
+                                <h3 class="section-title">Quota Progress</h3>
+                                <div class="progress-card">
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" style={progressStyle}></div>
+                                    </div>
+                                    <div class="progress-info">
+                                        <div class="progress-stat">
+                                            <span class="stat-value">{progressPercentage}%</span>
+                                            <span class="stat-label">Progress</span>
+                                        </div>
+                                        <div class="progress-stat">
+                                            <span class="stat-value">{bookedQuota}</span>
+                                            <span class="stat-label">Booked</span>
+                                        </div>
+                                        <div class="progress-stat">
+                                            <span class="stat-value">{proposal.Min_Quota__c}</span>
+                                            <span class="stat-label">Min Quota</span>
+                                        </div>
+                                        <div class="progress-stat">
+                                            <span class="stat-value">{proposal.Max_Quota__c}</span>
+                                            <span class="stat-label">Max Quota</span>
+                                        </div>
+                                        <div class="progress-stat">
+                                            <span class="stat-value">{availableQuota}</span>
+                                            <span class="stat-label">Available</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Info Grid -->
+                            <div class="info-grid">
+                                <!-- Product -->
+                                <div class="info-card">
+                                    <div class="info-icon">
+                                        <lightning-icon icon-name="standard:product" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Product</span>
+                                        <span class="info-value">{productName}</span>
+                                        <template lwc:if={productCode}>
+                                            <span class="info-subvalue">{productCode}</span>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Base Price -->
+                                <div class="info-card">
+                                    <div class="info-icon">
+                                        <lightning-icon icon-name="utility:moneybag" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Base Price</span>
+                                        <span class="info-value highlight">{basePriceFormatted}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Account -->
+                                <div class="info-card">
+                                    <div class="info-icon">
+                                        <lightning-icon icon-name="standard:account" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Account</span>
+                                        <span class="info-value">{accountName}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Start Date -->
+                                <div class="info-card">
+                                    <div class="info-icon">
+                                        <lightning-icon icon-name="utility:event" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Start Date</span>
+                                        <span class="info-value">{startDateFormatted}</span>
+                                    </div>
+                                </div>
+
+                                <!-- End Date -->
+                                <div class="info-card">
+                                    <div class="info-icon">
+                                        <lightning-icon icon-name="utility:clock" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">End Date</span>
+                                        <span class="info-value">{endDateFormatted}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Delivery Date -->
+                                <div class="info-card">
+                                    <div class="info-icon">
+                                        <lightning-icon icon-name="utility:shipping" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="info-content">
+                                        <span class="info-label">Delivery Start</span>
+                                        <span class="info-value">{deliveryDateFormatted}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <template lwc:if={hasDescription}>
+                                <div class="description-section">
+                                    <h3 class="section-title">Description</h3>
+                                    <div class="description-content">
+                                        <lightning-formatted-rich-text value={proposal.Description__c}></lightning-formatted-rich-text>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-tab>
+
+                    <!-- Discounts Tab -->
+                    <lightning-tab label="Discounts" value="discounts">
+                        <div class="discount-content">
+                            <c-group-buy-discount-manager record-id={proposal.Id}></c-group-buy-discount-manager>
+                        </div>
+                    </lightning-tab>
+                </lightning-tabset>
+            </div>
+
+            <!-- Footer -->
+            <footer class="slds-modal__footer">
+                <lightning-button label="Close" onclick={handleClose}></lightning-button>
+                <template lwc:if={canEdit}>
+                    <lightning-button label="Edit" variant="brand" onclick={handleEdit}></lightning-button>
+                </template>
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>

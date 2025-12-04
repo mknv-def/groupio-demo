@@ -1,0 +1,154 @@
+<template>
+    <!-- Selected Product Display -->
+    <template lwc:if={hasSelectedProduct}>
+        <div class="selected-product-card">
+            <div class="selected-product-icon">
+                <lightning-icon icon-name="standard:product" size="medium"></lightning-icon>
+            </div>
+            <div class="selected-product-info">
+                <h3 class="product-name">{selectedProduct.Name}</h3>
+                <template lwc:if={selectedProduct.ProductCode}>
+                    <p class="product-code">Code: {selectedProduct.ProductCode}</p>
+                </template>
+            </div>
+            <button class="remove-button" onclick={handleRemoveProduct}>
+                <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+            </button>
+        </div>
+    </template>
+
+    <!-- Mode Selection -->
+    <template lwc:else>
+        <div class="mode-buttons">
+            <lightning-button-group>
+                <lightning-button
+                    label="Search Existing"
+                    icon-name="utility:search"
+                    variant={searchButtonVariant}
+                    onclick={handleSearchMode}>
+                </lightning-button>
+                <lightning-button
+                    label="Create New"
+                    icon-name="utility:add"
+                    variant={createButtonVariant}
+                    onclick={handleCreateMode}>
+                </lightning-button>
+            </lightning-button-group>
+        </div>
+
+        <!-- Search Mode -->
+        <template lwc:if={isSearchMode}>
+            <div class="search-section">
+                <lightning-input
+                    type="search"
+                    label="Search Products"
+                    placeholder="Enter product name or code..."
+                    value={searchTerm}
+                    onchange={handleSearchChange}>
+                </lightning-input>
+
+                <!-- Loading -->
+                <template lwc:if={isSearching}>
+                    <div class="search-loading">
+                        <lightning-spinner size="small" alternative-text="Searching..."></lightning-spinner>
+                    </div>
+                </template>
+
+                <!-- Results -->
+                <template lwc:if={showSearchResults}>
+                    <ul class="search-results">
+                        <template for:each={searchResults} for:item="product">
+                            <li key={product.Id} class="search-result-item" data-id={product.Id} onclick={handleProductClick}>
+                                <lightning-icon icon-name="standard:product" size="small"></lightning-icon>
+                                <div class="result-info">
+                                    <span class="result-name">{product.Name}</span>
+                                    <template lwc:if={product.ProductCode}>
+                                        <span class="result-code">{product.ProductCode}</span>
+                                    </template>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+
+                <!-- No Results -->
+                <template lwc:if={showNoResults}>
+                    <div class="no-results">
+                        <p>No products found. Try different keywords or create a new product.</p>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Create Mode -->
+        <template lwc:if={isCreateMode}>
+            <div class="create-section">
+                <!-- Loading -->
+                <template lwc:if={isCreating}>
+                    <lightning-spinner size="small" alternative-text="Creating..."></lightning-spinner>
+                </template>
+
+                <div class="create-form">
+                    <div class="create-form-grid">
+                        <lightning-input
+                            type="text"
+                            label="Product Name"
+                            name="Name"
+                            value={newProduct.Name}
+                            onchange={handleNewProductChange}
+                            required>
+                        </lightning-input>
+
+                        <lightning-input
+                            type="text"
+                            label="Product Code"
+                            name="ProductCode"
+                            value={newProduct.ProductCode}
+                            onchange={handleNewProductChange}>
+                        </lightning-input>
+
+                        <lightning-combobox
+                            name="Brand__c"
+                            label="Brand"
+                            value={newProduct.Brand__c}
+                            options={brandOptions}
+                            onchange={handleNewProductChange}>
+                        </lightning-combobox>
+
+                        <lightning-combobox
+                            name="Character__c"
+                            label="Character"
+                            value={newProduct.Character__c}
+                            options={characterOptions}
+                            onchange={handleNewProductChange}>
+                        </lightning-combobox>
+
+                        <lightning-input
+                            type="checkbox"
+                            label="Active"
+                            name="IsActive"
+                            checked={newProduct.IsActive}
+                            onchange={handleNewProductChange}>
+                        </lightning-input>
+                    </div>
+
+                    <lightning-textarea
+                        name="Description"
+                        label="Description"
+                        value={newProduct.Description}
+                        onchange={handleNewProductChange}>
+                    </lightning-textarea>
+
+                    <div class="create-actions">
+                        <lightning-button
+                            label="Create Product"
+                            variant="brand"
+                            onclick={handleCreateProduct}
+                            disabled={isCreateDisabled}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </template>
+</template>

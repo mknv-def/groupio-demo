@@ -1,0 +1,173 @@
+<template>
+    <div class="proposal-form">
+        <!-- Loading -->
+        <template lwc:if={isLoading}>
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </template>
+
+        <!-- Validation Errors -->
+        <template lwc:if={hasValidationErrors}>
+            <div class="validation-errors">
+                <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
+                <div class="error-list">
+                    <template for:each={validationErrors} for:item="err">
+                        <span key={err.field}>{err.message}</span>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Form Tabs -->
+        <lightning-tabset active-tab-value={activeTab}>
+            
+            <!-- DETAILS TAB -->
+            <lightning-tab label="Proposal Details *" value="details">
+                <div class="form-section">
+                    <div class="form-grid">
+                        <!-- Proposal Name -->
+                        <div class="form-field">
+                            <lightning-input
+                                type="text"
+                                label="Proposal Name"
+                                data-field="Name"
+                                value={proposal.Name}
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-input>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="form-field">
+                            <lightning-combobox
+                                name="Status__c"
+                                label="Status"
+                                value={proposal.Status__c}
+                                options={statusOptions}
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-combobox>
+                        </div>
+
+                        <!-- Type -->
+                        <div class="form-field">
+                            <lightning-combobox
+                                name="Type__c"
+                                label="Type"
+                                value={proposal.Type__c}
+                                options={typeOptions}
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-combobox>
+                        </div>
+
+                        <!-- Base Price -->
+                        <div class="form-field">
+                            <lightning-input
+                                type="number"
+                                label="Base Price"
+                                data-field="Base_Price__c"
+                                value={proposal.Base_Price__c}
+                                formatter="currency"
+                                step="0.01"
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-input>
+                        </div>
+
+                        <!-- Min Quota -->
+                        <div class="form-field">
+                            <lightning-input
+                                type="number"
+                                label="Min Quota"
+                                data-field="Min_Quota__c"
+                                value={proposal.Min_Quota__c}
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-input>
+                        </div>
+
+                        <!-- Max Quota -->
+                        <div class="form-field">
+                            <lightning-input
+                                type="number"
+                                label="Max Quota"
+                                data-field="Max_Quota__c"
+                                value={proposal.Max_Quota__c}
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-input>
+                        </div>
+
+                        <!-- Start Date -->
+                        <div class="form-field">
+                            <lightning-input
+                                type="datetime"
+                                label="Start Date"
+                                data-field="Start_Date__c"
+                                value={proposal.Start_Date__c}
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-input>
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="form-field">
+                            <lightning-input
+                                type="datetime"
+                                label="End Date"
+                                data-field="End_Date__c"
+                                value={proposal.End_Date__c}
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-input>
+                        </div>
+
+                        <!-- Delivery Date -->
+                        <div class="form-field">
+                            <lightning-input
+                                type="date"
+                                label="Delivery Start Date"
+                                data-field="Approximate_Deliver_Start_Date__c"
+                                value={proposal.Approximate_Deliver_Start_Date__c}
+                                onchange={handleFieldChange}
+                                required>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- Description (Full Width) -->
+                    <div class="form-field-full">
+                        <lightning-input-rich-text
+                            label="Description"
+                            value={proposal.Description__c}
+                            onchange={handleFieldChange}
+                            data-field="Description__c">
+                        </lightning-input-rich-text>
+                    </div>
+                </div>
+            </lightning-tab>
+
+            <!-- PRODUCT TAB -->
+            <lightning-tab label={productTabLabel} value="product">
+                <div class="form-section">
+                    <c-group-buy-product-selector
+                        selected-product={selectedProduct}
+                        onselect={handleProductSelected}
+                        onremove={handleProductRemoved}>
+                    </c-group-buy-product-selector>
+                </div>
+            </lightning-tab>
+        </lightning-tabset>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+            <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+            <lightning-button 
+                label="Create Proposal" 
+                variant="brand" 
+                onclick={handleSubmit}
+                disabled={isSubmitDisabled}>
+            </lightning-button>
+        </div>
+    </div>
+</template>

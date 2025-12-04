@@ -1,0 +1,167 @@
+<template>
+    <!-- Header with Filter -->
+    <div class="list-header">
+        <h2 class="list-title">My Proposals</h2>
+        <lightning-combobox
+            label="Filter by Status"
+            variant="label-hidden"
+            value={filterStatus}
+            options={statusFilterOptions}
+            onchange={handleFilterChange}
+            class="status-filter">
+        </lightning-combobox>
+    </div>
+
+    <!-- Loading -->
+    <template lwc:if={isLoading}>
+        <div class="loading-container">
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </div>
+    </template>
+
+    <template lwc:else>
+        <!-- Empty State -->
+        <template lwc:if={noProposals}>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <lightning-icon icon-name="utility:inbox" size="large"></lightning-icon>
+                </div>
+                <h3>No Proposals Found</h3>
+                <p>Create your first group buy proposal to get started.</p>
+            </div>
+        </template>
+
+        <!-- Proposals Table -->
+        <template lwc:if={hasProposals}>
+            <div class="proposals-table-container">
+                <table class="proposals-table">
+                    <thead>
+                        <tr>
+                            <th>Proposal</th>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Dates</th>
+                            <th>Progress</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={filteredProposals} for:item="prop">
+                            <tr key={prop.Id} class="proposal-row">
+                                <!-- Proposal Name -->
+                                <td class="cell-proposal">
+                                    <button class="proposal-name-link" data-id={prop.Id} onclick={handleView}>
+                                        {prop.Name}
+                                    </button>
+                                    <span class="proposal-type">{prop.Type__c}</span>
+                                </td>
+
+                                <!-- Product -->
+                                <td class="cell-product">
+                                    <div class="product-info">
+                                        <lightning-icon icon-name="standard:product" size="x-small"></lightning-icon>
+                                        <span>{prop.productName}</span>
+                                    </div>
+                                </td>
+
+                                <!-- Price -->
+                                <td class="cell-price">
+                                    {prop.basePriceFormatted}
+                                </td>
+
+                                <!-- Dates -->
+                                <td class="cell-dates">
+                                    <div class="dates-container">
+                                        <span class="date-label">Start:</span>
+                                        <span>{prop.startDateFormatted}</span>
+                                    </div>
+                                    <div class="dates-container">
+                                        <span class="date-label">End:</span>
+                                        <span>{prop.endDateFormatted}</span>
+                                    </div>
+                                </td>
+
+                                <!-- Progress -->
+                                <td class="cell-progress">
+                                    <div class="progress-container">
+                                        <div class="progress-bar-bg">
+                                            <div class="progress-bar-fill" style={prop.progressStyle}></div>
+                                        </div>
+                                        <div class="progress-stats">
+                                            <span class={prop.progressTextClass}>
+                                                {prop.progressText}
+                                            </span>
+                                            <span class="quota-text">{prop.bookedQuota}/{prop.Min_Quota__c}</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="cell-status">
+                                    <span class={prop.statusClass}>{prop.Status__c}</span>
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="cell-actions">
+                                    <div class="actions-container">
+                                        <lightning-button-icon
+                                            icon-name="utility:preview"
+                                            alternative-text="View"
+                                            title="View Details"
+                                            size="small"
+                                            data-id={prop.Id}
+                                            onclick={handleView}>
+                                        </lightning-button-icon>
+
+                                        <template lwc:if={prop.canEdit}>
+                                            <lightning-button-icon
+                                                icon-name="utility:edit"
+                                                alternative-text="Edit"
+                                                title="Edit"
+                                                size="small"
+                                                data-id={prop.Id}
+                                                onclick={handleEdit}>
+                                            </lightning-button-icon>
+                                        </template>
+
+                                        <lightning-button-icon
+                                            icon-name="utility:moneybag"
+                                            alternative-text="Discounts"
+                                            title="Manage Discounts"
+                                            size="small"
+                                            data-id={prop.Id}
+                                            onclick={handleManageDiscounts}>
+                                        </lightning-button-icon>
+
+                                        <template lwc:if={prop.canDelete}>
+                                            <lightning-button-icon
+                                                icon-name="utility:delete"
+                                                alternative-text="Delete"
+                                                title="Delete"
+                                                size="small"
+                                                variant="bare"
+                                                data-id={prop.Id}
+                                                onclick={handleDelete}>
+                                            </lightning-button-icon>
+                                        </template>
+
+                                        <template lwc:if={prop.canSubmit}>
+                                            <lightning-button
+                                                label="Submit"
+                                                variant="brand"
+                                                size="small"
+                                                data-id={prop.Id}
+                                                onclick={handleSubmitForApproval}>
+                                            </lightning-button>
+                                        </template>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+    </template>
+</template>
