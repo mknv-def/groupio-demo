@@ -163,6 +163,20 @@
         <type>Percent</type>
     </fields>
     <fields>
+        <fullName>Discounted_Price__c</fullName>
+        <formula>IF(
+    ISNULL(Group_Buy_Proposal__r.Base_Price__c),
+    null,
+    Group_Buy_Proposal__r.Base_Price__c * (1 - BLANKVALUE(Discount__c, 0) / 100))</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Discounted Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
         <fullName>Group_Buy_Proposal__c</fullName>
         <label>Group Buy Proposal</label>
         <referenceTo>Group_Buy_Proposal__c</referenceTo>
@@ -173,6 +187,17 @@
         <trackTrending>false</trackTrending>
         <type>MasterDetail</type>
         <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+    <fields>
+        <fullName>Is_Current_Tier__c</fullName>
+        <formula>AND(
+    BLANKVALUE(Group_Buy_Proposal__r.Booked_Quota__c, 0) &gt;= BLANKVALUE(Min_Quota_For_Discount__c, 0),
+    BLANKVALUE(Group_Buy_Proposal__r.Booked_Quota__c, 0) &lt;= BLANKVALUE(Max_Quota_Discount__c, 999999999)
+)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Is Current Tier</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
     </fields>
     <fields>
         <fullName>Is_Main__c</fullName>
@@ -203,6 +228,32 @@
         <type>Number</type>
         <unique>false</unique>
     </fields>
+    <fields>
+        <fullName>Savings_Amount__c</fullName>
+        <formula>IF(
+    ISNULL(Group_Buy_Proposal__r.Base_Price__c),
+    null,
+    Group_Buy_Proposal__r.Base_Price__c * BLANKVALUE(Discount__c, 0) / 100
+)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Savings Amount</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Tier_Order__c</fullName>
+        <externalId>false</externalId>
+        <label>Tier Order</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
     <label>Group Proposal Discount</label>
     <nameField>
         <displayFormat>D-{00000}</displayFormat>
@@ -212,5 +263,38 @@
     <pluralLabel>Group Proposal Discounts</pluralLabel>
     <searchLayouts/>
     <sharingModel>ControlledByParent</sharingModel>
+    <validationRules>
+        <fullName>VR_Discount_Min_Greater_Than_Proposal_Mi</fullName>
+        <active>true</active>
+        <description>Discount tier min should be at least proposal min</description>
+        <errorConditionFormula>Min_Quota_For_Discount__c &lt; Group_Buy_Proposal__r.Min_Quota__c</errorConditionFormula>
+        <errorDisplayField>Min_Quota_For_Discount__c</errorDisplayField>
+        <errorMessage>Discount tier minimum should be at least the proposal minimum quota.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Discount_Min_Less_Than_Max</fullName>
+        <active>true</active>
+        <description>Min quota must be less than max quota</description>
+        <errorConditionFormula>Min_Quota_For_Discount__c &gt;= Max_Quota_Discount__c</errorConditionFormula>
+        <errorDisplayField>Min_Quota_For_Discount__c</errorDisplayField>
+        <errorMessage>Minimum Quota must be less than Maximum Quota for discount tier.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Discount_No_Edit_When_Active</fullName>
+        <active>true</active>
+        <description>Cannot edit discounts when proposal is active</description>
+        <errorConditionFormula>ISPICKVAL(Group_Buy_Proposal__r.Status__c, &quot;Active&quot;) ||
+ISPICKVAL(Group_Buy_Proposal__r.Status__c, &quot;Closed&quot;) ||
+ISPICKVAL(Group_Buy_Proposal__r.Status__c, &quot;Expired&quot;)</errorConditionFormula>
+        <errorMessage>Cannot modify discount tiers after proposal is Active, Closed, or Expired.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Discount_Percentage_Range</fullName>
+        <active>true</active>
+        <description>Discount must be between 0 and 100%</description>
+        <errorConditionFormula>Discount__c &lt; 0 || Discount__c &gt; 1</errorConditionFormula>
+        <errorDisplayField>Discount__c</errorDisplayField>
+        <errorMessage>Discount must be between 0% and 100%.</errorMessage>
+    </validationRules>
     <visibility>Public</visibility>
 </CustomObject>

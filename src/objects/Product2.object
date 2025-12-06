@@ -143,7 +143,40 @@
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <enableDataTranslation>true</enableDataTranslation>
     <enableFeeds>false</enableFeeds>
-    <externalSharingModel>Private</externalSharingModel>
+    <externalSharingModel>ReadWrite</externalSharingModel>
+    <fields>
+        <fullName>Approval_Status__c</fullName>
+        <label>Approval Status</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Draft</fullName>
+                    <default>false</default>
+                    <label>Draft</label>
+                </value>
+                <value>
+                    <fullName>Pending Approval</fullName>
+                    <default>false</default>
+                    <label>Pending Approval</label>
+                </value>
+                <value>
+                    <fullName>Approved</fullName>
+                    <default>false</default>
+                    <label>Approved</label>
+                </value>
+                <value>
+                    <fullName>Rejected</fullName>
+                    <default>false</default>
+                    <label>Rejected</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
     <fields>
         <fullName>Brand__c</fullName>
         <label>Brand</label>
@@ -314,6 +347,19 @@
         <trackHistory>false</trackHistory>
     </fields>
     <fields>
+        <fullName>Lead_Time_Days__c</fullName>
+        <description>Days from order to delivery</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Days from order to delivery</inlineHelpText>
+        <label>Lead Time Days</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackHistory>false</trackHistory>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>Material__c</fullName>
         <label>Material</label>
         <required>false</required>
@@ -349,6 +395,19 @@
                 </value>
             </valueSetDefinition>
         </valueSet>
+    </fields>
+    <fields>
+        <fullName>Minimum_Order_Quantity__c</fullName>
+        <description>Min qty for group buy</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Min qty for group buy</inlineHelpText>
+        <label>Minimum Order Quantity</label>
+        <precision>10</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackHistory>false</trackHistory>
+        <type>Number</type>
+        <unique>false</unique>
     </fields>
     <fields>
         <fullName>Name</fullName>
@@ -479,12 +538,33 @@
         <type>Lookup</type>
     </fields>
     <fields>
+        <fullName>Standard_Price__c</fullName>
+        <description>Standard retail price for reference</description>
+        <label>Standard Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <type>Currency</type>
+    </fields>
+    <fields>
         <fullName>StockCheckMethod</fullName>
         <trackHistory>false</trackHistory>
     </fields>
     <fields>
         <fullName>StockKeepingUnit</fullName>
         <trackHistory>false</trackHistory>
+    </fields>
+    <fields>
+        <fullName>Supplier__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <label>Supplier</label>
+        <referenceTo>Account</referenceTo>
+        <relationshipLabel>Products</relationshipLabel>
+        <relationshipName>Products</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <type>Lookup</type>
     </fields>
     <fields>
         <fullName>TaxPolicyId</fullName>

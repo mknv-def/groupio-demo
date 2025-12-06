@@ -5,7 +5,7 @@ import updateOrderQuantity from '@salesforce/apex/ConditionalOrderController.upd
 import cancelOrder from '@salesforce/apex/ConditionalOrderController.cancelOrder';
 
 export default class ConditionalOrderHistory extends LightningElement {
-    @api recordId; // Optional - for record page context
+    @api recordId;
 
     @track orderGroups = [];
     @track isLoading = true;
@@ -27,10 +27,6 @@ export default class ConditionalOrderHistory extends LightningElement {
     notificationTimeout;
 
     accountId = null;
-
-    // ===============================
-    // LIFECYCLE
-    // ===============================
 
     async connectedCallback() {
         await this.loadContext();
@@ -79,19 +75,40 @@ export default class ConditionalOrderHistory extends LightningElement {
             const bookedQuota = proposal.Booked_Quota__c || 0;
             const currentDiscount = this.findCurrentDiscount(discounts, bookedQuota);
 
-            // Process discounts with current indicator
-            const processedDiscounts = discounts.map(d => ({
-                ...d,
-                discountPercent: ((d.Discount__c || 0) * 100).toFixed(1),
-                rangeText: `${d.Min_Quota_For_Discount__c} - ${d.Max_Quota_Discount__c}`,
-                isCurrent: currentDiscount && d.Id === currentDiscount.Id,
-                cssClass: currentDiscount && d.Id === currentDiscount.Id ? 'discount-tier current' : 'discount-tier'
-            }));
+            // --- FIX 1: Normalize Discount Values ---
+            const currentDiscountVal = currentDiscount ? this.normalizePercentage(currentDiscount.Discount__c) : 0;
 
-            // Process orders
+            // Process discounts
+            const processedDiscounts = discounts.map(d => {
+                const rawDiscount = d.Discount__c || 0;
+                // Determine if we display as-is or need formatting
+                // If raw > 1 (e.g. 10), it's 10%. If raw <= 1 (e.g. 0.1), it's 10%.
+                const displayPercent = rawDiscount > 1 ? rawDiscount : (rawDiscount * 100);
+
+                return {
+                    ...d,
+                    discountPercent: displayPercent.toFixed(1),
+                    rangeText: `${d.Min_Quota_For_Discount__c} - ${d.Max_Quota_Discount__c}`,
+                    isCurrent: currentDiscount && d.Id === currentDiscount.Id,
+                    cssClass: currentDiscount && d.Id === currentDiscount.Id ? 'discount-tier current' : 'discount-tier'
+                };
+            });
+
+            // --- FIX 2: Normalize Progress Percentage ---
+            // If progress > 100, assume it's already a percent (e.g. 250). Don't mulitply by 100.
+            let rawProgress = proposal.Progress_Percentage__c || 0;
+            let displayProgress = rawProgress;
+
+            // Heuristic: If value is small (e.g. 2.5), it's a decimal ratio -> multiply by 100 (250%).
+            // If value is large (e.g. 250), it's already a percent -> keep as 250.
+            // Exception: 0.5 (50%) vs 1 (100%).
+            // We assume standard Salesforce Percent fields (decimals) unless value > 10.
+            if (rawProgress <= 10) {
+                displayProgress = rawProgress * 100;
+            }
+
             const processedOrders = orders.map(order => ({
                 ...order,
-                // Boolean flags calculated here for HTML usage
                 isConfirmed: order.Status__c === 'Confirmed',
                 isCancelled: order.Status__c === 'Cancelled',
                 canEdit: order.Status__c !== 'Confirmed' && order.Status__c !== 'Cancelled',
@@ -100,15 +117,15 @@ export default class ConditionalOrderHistory extends LightningElement {
                 formattedDate: this.formatDate(order.CreatedDate),
                 unitPrice: this.formatCurrency(proposal.Base_Price__c),
                 totalPrice: this.formatCurrency((proposal.Base_Price__c || 0) * (order.Quantity__c || 0)),
+                // Use normalized discount (decimal format) for math
                 discountedUnitPrice: currentDiscount
-                    ? this.formatCurrency((proposal.Base_Price__c || 0) * (1 - (currentDiscount.Discount__c || 0)))
+                    ? this.formatCurrency((proposal.Base_Price__c || 0) * (1 - currentDiscountVal))
                     : null,
                 discountedTotalPrice: currentDiscount
-                    ? this.formatCurrency((proposal.Base_Price__c || 0) * (1 - (currentDiscount.Discount__c || 0)) * (order.Quantity__c || 0))
+                    ? this.formatCurrency((proposal.Base_Price__c || 0) * (1 - currentDiscountVal) * (order.Quantity__c || 0))
                     : null
             }));
 
-            // Calculate totals for this proposal
             const totalQuantity = orders.reduce((sum, o) => sum + (o.Quantity__c || 0), 0);
 
             return {
@@ -121,8 +138,8 @@ export default class ConditionalOrderHistory extends LightningElement {
                     productName: proposal.Product__r?.Name || 'N/A',
                     productCode: proposal.Product__r?.ProductCode || '',
                     basePriceFormatted: this.formatCurrency(proposal.Base_Price__c),
-                    progressPercent: Math.round((proposal.Progress_Percentage__c || 0) * 100),
-                    progressStyle: `width: ${Math.min(100, (proposal.Progress_Percentage__c || 0) * 100)}%`,
+                    progressPercent: Math.round(displayProgress),
+                    progressStyle: `width: ${Math.min(100, displayProgress)}%`,
                     bookedQuota: bookedQuota,
                     statusClass: this.getProposalStatusClass(proposal.Status__c),
                     startDateFormatted: this.formatDate(proposal.Start_Date__c),
@@ -132,7 +149,7 @@ export default class ConditionalOrderHistory extends LightningElement {
                 discounts: processedDiscounts,
                 hasDiscounts: discounts.length > 0,
                 currentDiscount: currentDiscount ? {
-                    percent: ((currentDiscount.Discount__c || 0) * 100).toFixed(1),
+                    percent: (currentDiscountVal * 100).toFixed(1),
                     range: `${currentDiscount.Min_Quota_For_Discount__c} - ${currentDiscount.Max_Quota_Discount__c}`
                 } : null,
                 totalQuantity,
@@ -141,10 +158,23 @@ export default class ConditionalOrderHistory extends LightningElement {
         });
     }
 
+    /**
+     * Helper to turn any value (10 or 0.1) into a standard decimal (0.1)
+     */
+    normalizePercentage(value) {
+        if (!value) return 0;
+        // If value is greater than 1, assume it is a whole number percent (e.g., 10 = 10%)
+        // Exception: if discount is 100% (free), value 1 is ambiguous (1% or 100%).
+        // Contextually for discounts, 5, 10, 15 are common. 0.05, 0.1 are common.
+        if (value > 1) {
+            return value / 100;
+        }
+        return value;
+    }
+
     findCurrentDiscount(discounts, bookedQuota) {
         if (!discounts || discounts.length === 0) return null;
 
-        // Sort by min quota descending to find the highest applicable tier
         const sorted = [...discounts].sort((a, b) =>
             (b.Min_Quota_For_Discount__c || 0) - (a.Min_Quota_For_Discount__c || 0)
         );
@@ -156,10 +186,6 @@ export default class ConditionalOrderHistory extends LightningElement {
         }
         return null;
     }
-
-    // ===============================
-    // GETTERS
-    // ===============================
 
     get hasOrders() {
         return this.orderGroups.length > 0;
@@ -175,8 +201,7 @@ export default class ConditionalOrderHistory extends LightningElement {
 
     get notificationClass() {
         if (!this.notification) return '';
-        const baseClass = 'notification';
-        return `${baseClass} notification-${this.notification.type}`;
+        return `notification notification-${this.notification.type}`;
     }
 
     get notificationIcon() {
@@ -188,10 +213,6 @@ export default class ConditionalOrderHistory extends LightningElement {
         };
         return icons[this.notification?.type] || 'utility:info';
     }
-
-    // ===============================
-    // FORMATTING HELPERS
-    // ===============================
 
     formatCurrency(value) {
         if (value == null) return 'N/A';
@@ -228,10 +249,6 @@ export default class ConditionalOrderHistory extends LightningElement {
         return classes[status] || 'proposal-status';
     }
 
-    // ===============================
-    // EVENT HANDLERS
-    // ===============================
-
     handleToggleGroup(event) {
         const proposalId = event.currentTarget.dataset.id;
         this.orderGroups = this.orderGroups.map(group => {
@@ -240,7 +257,6 @@ export default class ConditionalOrderHistory extends LightningElement {
                 return {
                     ...group,
                     isExpanded: isExpanded,
-                    // FIX: Calculate new icon name here
                     iconName: isExpanded ? 'utility:chevrondown' : 'utility:chevronright'
                 };
             }
@@ -252,7 +268,6 @@ export default class ConditionalOrderHistory extends LightningElement {
         this.loadOrders();
     }
 
-    // Edit Handlers
     handleEditOrder(event) {
         const orderId = event.currentTarget.dataset.id;
         const order = this.findOrderById(orderId);
@@ -297,7 +312,6 @@ export default class ConditionalOrderHistory extends LightningElement {
         }
     }
 
-    // Cancel Handlers
     handleCancelOrder(event) {
         const orderId = event.currentTarget.dataset.id;
         const order = this.findOrderById(orderId);
@@ -328,7 +342,6 @@ export default class ConditionalOrderHistory extends LightningElement {
         }
     }
 
-    // Notification Handlers
     showNotification(message, type = 'info') {
         this.notification = { message, type };
 
@@ -347,10 +360,6 @@ export default class ConditionalOrderHistory extends LightningElement {
             clearTimeout(this.notificationTimeout);
         }
     }
-
-    // ===============================
-    // UTILITY
-    // ===============================
 
     findOrderById(orderId) {
         for (const group of this.orderGroups) {

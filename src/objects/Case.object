@@ -198,13 +198,53 @@
     </actionOverrides>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <enableFeeds>true</enableFeeds>
-    <externalSharingModel>Private</externalSharingModel>
+    <externalSharingModel>ReadWrite</externalSharingModel>
     <fields>
         <fullName>AccountId</fullName>
         <trackFeedHistory>false</trackFeedHistory>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Approval_Status__c</fullName>
+        <label>Approval Status</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Draft</fullName>
+                    <default>false</default>
+                    <label>Draft</label>
+                </value>
+                <value>
+                    <fullName>Submitted</fullName>
+                    <default>false</default>
+                    <label>Submitted</label>
+                </value>
+                <value>
+                    <fullName>Under Review</fullName>
+                    <default>false</default>
+                    <label>Under Review</label>
+                </value>
+                <value>
+                    <fullName>Approved</fullName>
+                    <default>false</default>
+                    <label>Approved</label>
+                </value>
+                <value>
+                    <fullName>Rejected</fullName>
+                    <default>false</default>
+                    <label>Rejected</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
     </fields>
     <fields>
         <fullName>AssetId</fullName>
@@ -221,12 +261,67 @@
         <type>Lookup</type>
     </fields>
     <fields>
+        <fullName>Business_Type__c</fullName>
+        <label>Business Type</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Retail</fullName>
+                    <default>false</default>
+                    <label>Retail</label>
+                </value>
+                <value>
+                    <fullName>Wholesale</fullName>
+                    <default>false</default>
+                    <label>Wholesale</label>
+                </value>
+                <value>
+                    <fullName>Distributor</fullName>
+                    <default>false</default>
+                    <label>Distributor</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
         <fullName>ClosedDate</fullName>
         <trackTrending>false</trackTrending>
     </fields>
     <fields>
         <fullName>Comments</fullName>
         <trackTrending>false</trackTrending>
+    </fields>
+    <fields>
+        <fullName>Company_Registration_Number__c</fullName>
+        <externalId>false</externalId>
+        <label>Company Registration Number</label>
+        <length>255</length>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Conditional_Order__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <label>Conditional Order</label>
+        <referenceTo>Conditional_Order__c</referenceTo>
+        <relationshipLabel>Cases</relationshipLabel>
+        <relationshipName>Cases</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
     </fields>
     <fields>
         <fullName>ContactEmail</fullName>
@@ -394,6 +489,18 @@
         <type>Lookup</type>
     </fields>
     <fields>
+        <fullName>Product_Name__c</fullName>
+        <externalId>false</externalId>
+        <label>Product Name</label>
+        <length>255</length>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>Product__c</fullName>
         <label>Product</label>
         <required>false</required>
@@ -453,11 +560,53 @@
         </valueSet>
     </fields>
     <fields>
+        <fullName>Proposed_Category__c</fullName>
+        <externalId>false</externalId>
+        <label>Proposed Category</label>
+        <length>255</length>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Proposed_Price__c</fullName>
+        <label>Proposed Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
         <fullName>Reason</fullName>
         <trackFeedHistory>false</trackFeedHistory>
         <trackHistory>true</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Review_Date__c</fullName>
+        <label>Review Date</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Review_Feedback__c</fullName>
+        <label>Review Feedback</label>
+        <length>500</length>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
     </fields>
     <fields>
         <fullName>SLAViolation__c</fullName>
@@ -519,6 +668,166 @@
         <trackTrending>false</trackTrending>
     </fields>
     <fields>
+        <fullName>Sub_Type__c</fullName>
+        <label>Sub Type</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <controllingField>Type__c</controllingField>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Order Status</fullName>
+                    <default>false</default>
+                    <label>Order Status</label>
+                </value>
+                <value>
+                    <fullName>Delivery Question</fullName>
+                    <default>false</default>
+                    <label>Delivery Question</label>
+                </value>
+                <value>
+                    <fullName>Payment Issue</fullName>
+                    <default>false</default>
+                    <label>Payment Issue</label>
+                </value>
+                <value>
+                    <fullName>Product Information</fullName>
+                    <default>false</default>
+                    <label>Product Information</label>
+                </value>
+                <value>
+                    <fullName>Discount Question</fullName>
+                    <default>false</default>
+                    <label>Discount Question</label>
+                </value>
+                <value>
+                    <fullName>Technical Support</fullName>
+                    <default>false</default>
+                    <label>Technical Support</label>
+                </value>
+                <value>
+                    <fullName>Other</fullName>
+                    <default>false</default>
+                    <label>Other</label>
+                </value>
+                <value>
+                    <fullName>New Application</fullName>
+                    <default>false</default>
+                    <label>New Application</label>
+                </value>
+                <value>
+                    <fullName>Document Update</fullName>
+                    <default>false</default>
+                    <label>Document Update</label>
+                </value>
+                <value>
+                    <fullName>Status Check</fullName>
+                    <default>false</default>
+                    <label>Status Check</label>
+                </value>
+                <value>
+                    <fullName>New Account Request</fullName>
+                    <default>false</default>
+                    <label>New Account Request</label>
+                </value>
+                <value>
+                    <fullName>Credit Application</fullName>
+                    <default>false</default>
+                    <label>Credit Application</label>
+                </value>
+                <value>
+                    <fullName>Account Upgrade</fullName>
+                    <default>false</default>
+                    <label>Account Upgrade</label>
+                </value>
+                <value>
+                    <fullName>New Product Submission</fullName>
+                    <default>false</default>
+                    <label>New Product Submission</label>
+                </value>
+                <value>
+                    <fullName>Product Update</fullName>
+                    <default>false</default>
+                    <label>Product Update</label>
+                </value>
+                <value>
+                    <fullName>Resubmission</fullName>
+                    <default>false</default>
+                    <label>Resubmission</label>
+                </value>
+            </valueSetDefinition>
+            <valueSettings>
+                <controllingFieldValue>Standard Inquiry</controllingFieldValue>
+                <valueName>Order Status</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Standard Inquiry</controllingFieldValue>
+                <valueName>Delivery Question</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Standard Inquiry</controllingFieldValue>
+                <valueName>Payment Issue</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Standard Inquiry</controllingFieldValue>
+                <valueName>Product Information</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Standard Inquiry</controllingFieldValue>
+                <valueName>Discount Question</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Standard Inquiry</controllingFieldValue>
+                <valueName>Technical Support</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Standard Inquiry</controllingFieldValue>
+                <valueName>Other</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Merchandiser Registration</controllingFieldValue>
+                <valueName>New Application</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Merchandiser Registration</controllingFieldValue>
+                <valueName>Document Update</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>Merchandiser Registration</controllingFieldValue>
+                <valueName>Status Check</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>B2B Customer Registration</controllingFieldValue>
+                <valueName>New Account Request</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>B2B Customer Registration</controllingFieldValue>
+                <valueName>Credit Application</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>B2B Customer Registration</controllingFieldValue>
+                <valueName>Account Upgrade</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>New Product Approval</controllingFieldValue>
+                <valueName>New Product Submission</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>New Product Approval</controllingFieldValue>
+                <valueName>Product Update</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>New Product Approval</controllingFieldValue>
+                <valueName>Resubmission</valueName>
+            </valueSettings>
+        </valueSet>
+    </fields>
+    <fields>
         <fullName>Subject</fullName>
         <trackFeedHistory>false</trackFeedHistory>
         <trackHistory>true</trackHistory>
@@ -541,11 +850,70 @@
         <trackTrending>false</trackTrending>
     </fields>
     <fields>
+        <fullName>Tax_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>Tax Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>Type</fullName>
         <trackFeedHistory>false</trackFeedHistory>
         <trackHistory>true</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Type__c</fullName>
+        <label>Type</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Standard Inquiry</fullName>
+                    <default>false</default>
+                    <label>Standard Inquiry</label>
+                </value>
+                <value>
+                    <fullName>Merchandiser Registration</fullName>
+                    <default>false</default>
+                    <label>Merchandiser Registration</label>
+                </value>
+                <value>
+                    <fullName>B2B Customer Registration</fullName>
+                    <default>false</default>
+                    <label>B2B Customer Registration</label>
+                </value>
+                <value>
+                    <fullName>New Product Approval</fullName>
+                    <default>false</default>
+                    <label>New Product Approval</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Website__c</fullName>
+        <externalId>false</externalId>
+        <label>Website</label>
+        <length>255</length>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
     </fields>
     <listViews>
         <fullName>AllClosedCases</fullName>
@@ -580,6 +948,40 @@
         <label>All Open Cases</label>
     </listViews>
     <listViews>
+        <fullName>B2B_Customer_Registration</fullName>
+        <columns>CASES.CASE_NUMBER</columns>
+        <columns>NAME</columns>
+        <columns>CASES.SUBJECT</columns>
+        <columns>CASES.STATUS</columns>
+        <columns>CASES.PRIORITY</columns>
+        <columns>CASES.CREATED_DATE</columns>
+        <columns>CORE.USERS.ALIAS</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>CASES.REASON</field>
+            <operation>equals</operation>
+            <value>Business Group Onboarding</value>
+        </filters>
+        <label>B2B Customer Registration</label>
+    </listViews>
+    <listViews>
+        <fullName>Merchandiser_Registations</fullName>
+        <columns>CASES.CASE_NUMBER</columns>
+        <columns>NAME</columns>
+        <columns>CASES.SUBJECT</columns>
+        <columns>CASES.STATUS</columns>
+        <columns>CASES.PRIORITY</columns>
+        <columns>CASES.CREATED_DATE</columns>
+        <columns>CORE.USERS.ALIAS</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>CASES.REASON</field>
+            <operation>equals</operation>
+            <value>Merchandiser Application</value>
+        </filters>
+        <label>Merchandiser Registations</label>
+    </listViews>
+    <listViews>
         <fullName>MyCases</fullName>
         <filterScope>Mine</filterScope>
         <label>My Cases</label>
@@ -593,6 +995,23 @@
             <value>0</value>
         </filters>
         <label>My Open Cases</label>
+    </listViews>
+    <listViews>
+        <fullName>New_Category_Requests</fullName>
+        <columns>CASES.CASE_NUMBER</columns>
+        <columns>NAME</columns>
+        <columns>CASES.SUBJECT</columns>
+        <columns>CASES.STATUS</columns>
+        <columns>CASES.PRIORITY</columns>
+        <columns>CASES.CREATED_DATE</columns>
+        <columns>CORE.USERS.ALIAS</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>CASES.SUBJECT</field>
+            <operation>contains</operation>
+            <value>Category Request</value>
+        </filters>
+        <label>New Category Requests</label>
     </listViews>
     <listViews>
         <fullName>Open_Registration_Requests</fullName>

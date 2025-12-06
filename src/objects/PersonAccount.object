@@ -2,7 +2,7 @@
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
     <compactLayoutAssignment>SYSTEMPersonAccount</compactLayoutAssignment>
     <enableHistory>false</enableHistory>
-    <externalSharingModel>Private</externalSharingModel>
+    <externalSharingModel>ReadWrite</externalSharingModel>
     <recordTypes>
         <fullName>PersonAccount</fullName>
         <active>true</active>

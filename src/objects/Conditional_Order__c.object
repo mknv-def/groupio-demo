@@ -165,6 +165,36 @@
         <type>Lookup</type>
     </fields>
     <fields>
+        <fullName>Cancellation_Reason__c</fullName>
+        <label>Cancellation Reason</label>
+        <length>1000</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Cancelled_Date__c</fullName>
+        <label>Cancelled Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Confirmed_Date__c</fullName>
+        <label>Confirmed Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Delivery_Address__c</fullName>
+        <label>Delivery Address</label>
+        <length>1000</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
         <fullName>Discount_Applied__c</fullName>
         <label>Discount Applied</label>
         <precision>18</precision>
@@ -172,6 +202,15 @@
         <scale>2</scale>
         <trackTrending>false</trackTrending>
         <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Final_Unit_Price__c</fullName>
+        <label>Final Unit Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
     </fields>
     <fields>
         <fullName>Group_Buy_Proposal__c</fullName>
@@ -203,6 +242,39 @@
         <required>false</required>
         <trackTrending>false</trackTrending>
         <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Payment_Status__c</fullName>
+        <label>Payment Status</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Pending</fullName>
+                    <default>false</default>
+                    <label>Pending</label>
+                </value>
+                <value>
+                    <fullName>Paid</fullName>
+                    <default>false</default>
+                    <label>Paid</label>
+                </value>
+                <value>
+                    <fullName>Refunded</fullName>
+                    <default>false</default>
+                    <label>Refunded</label>
+                </value>
+                <value>
+                    <fullName>Failed</fullName>
+                    <default>false</default>
+                    <label>Failed</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
     </fields>
     <fields>
         <fullName>Product__c</fullName>
@@ -295,5 +367,47 @@
     <pluralLabel>Conditional Order</pluralLabel>
     <searchLayouts/>
     <sharingModel>ControlledByParent</sharingModel>
+    <validationRules>
+        <fullName>VR_Order_Cancellation_Reason</fullName>
+        <active>false</active>
+        <description>Cancellation reason required</description>
+        <errorConditionFormula>ISCHANGED(Status__c) &amp;&amp; 
+ISPICKVAL(Status__c, &quot;Cancelled&quot;) &amp;&amp; 
+ISBLANK(Cancellation_Reason__c)</errorConditionFormula>
+        <errorDisplayField>Cancellation_Reason__c</errorDisplayField>
+        <errorMessage>Please provide a cancellation reason.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Order_No_Edit_When_Confirmed</fullName>
+        <active>true</active>
+        <description>Cannot edit confirmed orders</description>
+        <errorConditionFormula>ISPICKVAL(PRIORVALUE(Status__c), &quot;Confirmed&quot;) &amp;&amp; 
+NOT(ISPICKVAL(Status__c, &quot;Confirmed&quot;))</errorConditionFormula>
+        <errorMessage>Confirmed orders cannot be modified.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Order_Proposal_Active</fullName>
+        <active>true</active>
+        <description>Can only create orders for active proposals</description>
+        <errorConditionFormula>ISNEW() &amp;&amp; NOT(ISPICKVAL(Group_Buy_Proposal__r.Status__c, &quot;Active&quot;))</errorConditionFormula>
+        <errorDisplayField>Group_Buy_Proposal__c</errorDisplayField>
+        <errorMessage>Orders can only be placed for Active proposals.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Order_Quantity_Positive</fullName>
+        <active>true</active>
+        <description>Quantity must be at least 1</description>
+        <errorConditionFormula>Quantity__c &lt; 1</errorConditionFormula>
+        <errorDisplayField>Quantity__c</errorDisplayField>
+        <errorMessage>Order quantity must be at least 1.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Order_Within_Available_Quota</fullName>
+        <active>true</active>
+        <description>Order quantity cannot exceed available quota</description>
+        <errorConditionFormula>ISNEW() &amp;&amp; Quantity__c &gt; Group_Buy_Proposal__r.Available_Quota__c</errorConditionFormula>
+        <errorDisplayField>Quantity__c</errorDisplayField>
+        <errorMessage>Error Message: Order quantity exceeds available quota. Maximum available: {!Group_Buy_Proposal__r.Available_Quota__c}</errorMessage>
+    </validationRules>
     <visibility>Public</visibility>
 </CustomObject>

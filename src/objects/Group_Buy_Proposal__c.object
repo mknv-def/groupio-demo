@@ -165,6 +165,30 @@
         <type>Lookup</type>
     </fields>
     <fields>
+        <fullName>Activated_Date__c</fullName>
+        <label>Activated Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Approved_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <label>Approved By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Group_Buy_Proposal</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Approved_Date__c</fullName>
+        <label>Approved Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
         <fullName>Approximate_Deliver_Start_Date__c</fullName>
         <label>Approximate Deliver Start Date</label>
         <required>false</required>
@@ -203,6 +227,43 @@
         <type>Summary</type>
     </fields>
     <fields>
+        <fullName>Cancellation_Reason__c</fullName>
+        <label>Cancellation Reason</label>
+        <length>500</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Closed_Date__c</fullName>
+        <label>Closed Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Current_Discount_Percent__c</fullName>
+        <label>Current Discount Percent</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Days_Remaining__c</fullName>
+        <externalId>false</externalId>
+        <formula>End_Date__c - NOW()</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Days Remaining</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>Description__c</fullName>
         <label>Description</label>
         <length>1500</length>
@@ -216,6 +277,23 @@
         <required>false</required>
         <trackTrending>false</trackTrending>
         <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Final_Price__c</fullName>
+        <label>Final Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Is_Expired__c</fullName>
+        <formula>End_Date__c &lt; NOW()</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Is Expired</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
     </fields>
     <fields>
         <fullName>Is_Min_Quota_Reached__c</fullName>
@@ -255,6 +333,19 @@
         <unique>false</unique>
     </fields>
     <fields>
+        <fullName>Order_Count__c</fullName>
+        <label>Order Count</label>
+        <summaryFilterItems>
+            <field>Conditional_Order__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Pending, Confirmed</value>
+        </summaryFilterItems>
+        <summaryForeignKey>Conditional_Order__c.Group_Buy_Proposal__c</summaryForeignKey>
+        <summaryOperation>count</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
         <fullName>Product__c</fullName>
         <deleteConstraint>SetNull</deleteConstraint>
         <label>Product</label>
@@ -275,6 +366,14 @@
         <scale>2</scale>
         <trackTrending>false</trackTrending>
         <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Rejection_Reason__c</fullName>
+        <label>Rejection Reason</label>
+        <length>500</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
     </fields>
     <fields>
         <fullName>Start_Date__c</fullName>
@@ -332,6 +431,17 @@
         </valueSet>
     </fields>
     <fields>
+        <fullName>Total_Revenue__c</fullName>
+        <formula>Booked_Quota__c * Final_Price__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Total Revenue</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
         <fullName>Type__c</fullName>
         <label>Type</label>
         <required>false</required>
@@ -367,5 +477,95 @@
     <pluralLabel>Group Buy Proposal</pluralLabel>
     <searchLayouts/>
     <sharingModel>ReadWrite</sharingModel>
+    <validationRules>
+        <fullName>VR_Proposal_Base_Price_Positive</fullName>
+        <active>true</active>
+        <description>Base price must be positive</description>
+        <errorConditionFormula>Base_Price__c &lt;= 0</errorConditionFormula>
+        <errorDisplayField>Base_Price__c</errorDisplayField>
+        <errorMessage>Base Price must be greater than zero.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Proposal_Delivery_After_End</fullName>
+        <active>true</active>
+        <description>Delivery date should be after end date</description>
+        <errorConditionFormula>NOT(ISBLANK(Approximate_Deliver_Start_Date__c)) &amp;&amp; 
+Approximate_Deliver_Start_Date__c &lt; DATEVALUE(End_Date__c)</errorConditionFormula>
+        <errorDisplayField>Approximate_Deliver_Start_Date__c</errorDisplayField>
+        <errorMessage>Delivery Date should be after the proposal End Date.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Proposal_End_After_Start</fullName>
+        <active>true</active>
+        <description>End date must be after start date</description>
+        <errorConditionFormula>End_Date__c &lt;= Start_Date__c</errorConditionFormula>
+        <errorDisplayField>End_Date__c</errorDisplayField>
+        <errorMessage>End Date must be after Start Date.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Proposal_Min_Less_Than_Max</fullName>
+        <active>true</active>
+        <errorConditionFormula>Min_Quota__c &gt; Max_Quota__c</errorConditionFormula>
+        <errorDisplayField>Min_Quota__c</errorDisplayField>
+        <errorMessage>Minimum Quota cannot be greater than Maximum Quota.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Proposal_No_Edit_When_Active</fullName>
+        <active>true</active>
+        <description>Cannot edit critical fields when active</description>
+        <errorConditionFormula>ISPICKVAL(Status__c, &quot;Active&quot;) &amp;&amp; (
+  ISCHANGED(Base_Price__c) ||
+  ISCHANGED(Min_Quota__c) ||
+  ISCHANGED(Max_Quota__c) ||
+  ISCHANGED(Product__c) ||
+  ISCHANGED(Start_Date__c) ||
+  ISCHANGED(End_Date__c)
+)</errorConditionFormula>
+        <errorMessage>Cannot modify pricing, quota, product, or dates while proposal is Active.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Proposal_Rejection_Requires_Reason</fullName>
+        <active>true</active>
+        <description>Rejection reason required when rejecting</description>
+        <errorConditionFormula>ISCHANGED(Status__c) &amp;&amp; 
+ISPICKVAL(Status__c, &quot;Rejected&quot;) &amp;&amp; 
+ISBLANK(Rejection_Reason__c)</errorConditionFormula>
+        <errorDisplayField>Rejection_Reason__c</errorDisplayField>
+        <errorMessage>Please provide a rejection reason.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Proposal_Start_Future</fullName>
+        <active>true</active>
+        <description>Start date must be in the future when creating</description>
+        <errorConditionFormula>ISNEW() &amp;&amp; Start_Date__c &lt; NOW()</errorConditionFormula>
+        <errorDisplayField>Start_Date__c</errorDisplayField>
+        <errorMessage>Start Date must be in the future.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>VR_Proposal_Status_Transition</fullName>
+        <active>true</active>
+        <description>Enforce valid status transitions</description>
+        <errorConditionFormula>ISCHANGED(Status__c) &amp;&amp; NOT(
+  /* Created can go to: Pending Approval */
+  (ISPICKVAL(PRIORVALUE(Status__c), &quot;Created&quot;) &amp;&amp; ISPICKVAL(Status__c, &quot;Pending Approval&quot;)) ||
+  
+  /* Pending Approval can go to: Approved, Rejected */
+  (ISPICKVAL(PRIORVALUE(Status__c), &quot;Pending Approval&quot;) &amp;&amp; 
+   (ISPICKVAL(Status__c, &quot;Approved&quot;) || ISPICKVAL(Status__c, &quot;Rejected&quot;))) ||
+  
+  /* Approved can go to: Active (system), Cancelled */
+  (ISPICKVAL(PRIORVALUE(Status__c), &quot;Approved&quot;) &amp;&amp; 
+   (ISPICKVAL(Status__c, &quot;Active&quot;) || ISPICKVAL(Status__c, &quot;Cancelled&quot;))) ||
+  
+  /* Active can go to: Closed, Expired (system), Cancelled */
+  (ISPICKVAL(PRIORVALUE(Status__c), &quot;Active&quot;) &amp;&amp; 
+   (ISPICKVAL(Status__c, &quot;Closed&quot;) || ISPICKVAL(Status__c, &quot;Expired&quot;) || ISPICKVAL(Status__c, &quot;Cancelled&quot;))) ||
+  
+  /* Rejected can go to: Created (resubmit) */
+  (ISPICKVAL(PRIORVALUE(Status__c), &quot;Rejected&quot;) &amp;&amp; ISPICKVAL(Status__c, &quot;Created&quot;))
+)</errorConditionFormula>
+        <errorDisplayField>Status__c</errorDisplayField>
+        <errorMessage>Invalid status transition. Please follow the approved workflow.</errorMessage>
+    </validationRules>
     <visibility>Public</visibility>
 </CustomObject>

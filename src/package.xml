@@ -118,6 +118,7 @@
         <members>Product_Category_Condition__c</members>
         <members>Conditional_Order__c</members>
         <members>Group_Proposal_Discount__c</members>
+        <members>Proposal_Status_Event__e.object-meta.xml</members>
         <name>CustomObject</name>
     </types>
     <types>
@@ -166,6 +167,9 @@
         <members>groupio Profile</members>
         <members>groupio Shopper Profile</members>
         <name>Profile</name>
+    </types>
+    <types>
+        <name>CustomMetadata</name>
     </types>
     <version>64.0</version>
 </Package>
