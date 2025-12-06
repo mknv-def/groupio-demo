@@ -347,6 +347,13 @@
         <trackHistory>false</trackHistory>
     </fields>
     <fields>
+        <fullName>Is_Group_Buy_Eligible__c</fullName>
+        <defaultValue>false</defaultValue>
+        <label>Is Group Buy Eligible</label>
+        <trackHistory>false</trackHistory>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
         <fullName>Lead_Time_Days__c</fullName>
         <description>Days from order to delivery</description>
         <externalId>false</externalId>
