@@ -226,6 +226,14 @@ export default class GroupBuyProposalManager extends LightningElement {
         }
     }
 
+    handleSubmitForApprovalFromView(event) {
+        const { message } = event.detail;
+        this.showNotification(message, 'success');
+        this.showViewModal = false;
+        this.viewProposal = null;
+        this.refreshKey++;
+    }
+
     handleError(event) {
         this.showNotification(event.detail.message, 'error');
     }

@@ -1,7 +1,9 @@
 import { LightningElement, api, track } from 'lwc';
+import createProposalApprovalCase from '@salesforce/apex/CaseController.createProposalApprovalCase';
 
 export default class GroupBuyProposalDetail extends LightningElement {
     @api proposal;
+    @track isSubmitting = false;
     
     // Use a setter/getter for activeTab to handle external changes
     _activeTab = 'details';
@@ -102,6 +104,10 @@ export default class GroupBuyProposalDetail extends LightningElement {
         return ['Created', 'Pending Approval', 'Rejected'].includes(status);
     }
 
+    get canSubmitForApproval() {
+        return this.proposal?.Status__c === 'Created';
+    }
+
     get hasDescription() {
         return !!this.proposal?.Description__c;
     }
@@ -120,5 +126,45 @@ export default class GroupBuyProposalDetail extends LightningElement {
 
     handleEdit() {
         this.dispatchEvent(new CustomEvent('edit'));
+    }
+
+    async handleSubmitForApproval() {
+        if (!this.proposal?.Id) {
+            return;
+        }
+
+        this.isSubmitting = true;
+
+        try {
+            const caseType = 'Merchandiser'; // Default to Merchandiser for seller portal
+            
+            const result = await createProposalApprovalCase({
+                proposalId: this.proposal.Id,
+                caseType: caseType
+            });
+
+            // Dispatch success event with case info
+            this.dispatchEvent(new CustomEvent('submitforapproval', {
+                detail: {
+                    proposalId: this.proposal.Id,
+                    caseId: result.Id,
+                    caseNumber: result.CaseNumber,
+                    message: `Submitted for approval. Case #${result.CaseNumber} created.`
+                }
+            }));
+
+            // Close the modal
+            this.handleClose();
+
+        } catch (error) {
+            console.error('Error submitting for approval:', error);
+            this.dispatchEvent(new CustomEvent('error', {
+                detail: {
+                    message: error.body?.message || 'Failed to submit for approval'
+                }
+            }));
+        } finally {
+            this.isSubmitting = false;
+        }
     }
 }

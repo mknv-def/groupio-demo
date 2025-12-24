@@ -2,6 +2,7 @@ import { LightningElement, api, track } from 'lwc';
 import getMyProposals from '@salesforce/apex/GroupBuyProposalController.getMyProposals';
 import updateProposal from '@salesforce/apex/GroupBuyProposalController.updateProposal';
 import deleteProposal from '@salesforce/apex/GroupBuyProposalController.deleteProposal';
+import createProposalApprovalCase from '@salesforce/apex/CaseController.createProposalApprovalCase';
 
 export default class GroupBuyProposalList extends LightningElement {
     @api accountId;
@@ -171,19 +172,28 @@ export default class GroupBuyProposalList extends LightningElement {
 
     async handleSubmitForApproval(event) {
         const proposalId = event.currentTarget.dataset.id;
+        const proposal = this.proposals.find(p => p.Id === proposalId);
         
+        if (!proposal) {
+            this.fireError('Proposal not found');
+            return;
+        }
+
         try {
-            await updateProposal({
-                proposalData: JSON.stringify({
-                    Id: proposalId,
-                    Status__c: 'Pending Approval'
-                })
+            // Determine case type based on proposal context
+            // If Account has Merchandiser buyer group - it's Merchandiser, otherwise B2B Buyer
+            const caseType = 'Merchandiser'; // Default to Merchandiser for seller portal
+            
+            const result = await createProposalApprovalCase({
+                proposalId: proposalId,
+                caseType: caseType
             });
 
-            this.fireSuccess('Submitted for approval');
+            this.fireSuccess(`Submitted for approval. Case #${result.CaseNumber} created.`);
             await this.loadProposals();
         } catch (error) {
-            this.fireError('Failed to submit for approval');
+            console.error('Error submitting for approval:', error);
+            this.fireError(error.body?.message || 'Failed to submit for approval');
         }
     }
 

@@ -1,89 +1,237 @@
 <template>
     <lightning-card title={cardTitle} icon-name="standard:case">
         <div class="slds-p-around_medium">
-            <template if:true={isSubmitted}>
-                <div class="slds-notify slds-notify_alert slds-theme_success slds-m-bottom_medium" role="alert">
-                    <span class="slds-icon_container slds-icon-utility-check slds-m-right_x-small">
-                        <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
-                    </span>
-                    <h2>Your Business Group Application Has Been Submitted!</h2>
-                    <p>Your Case Number: <strong><a onclick={navigateToCaseRecord} data-id={recordId}>{recordId}</a></strong>. We will review your business information shortly.</p>
+            <!-- Success State -->
+            <template lwc:if={isSubmitted}>
+                <div class="slds-notify slds-notify_alert slds-alert_success slds-m-bottom_medium" role="alert">
+                    <span class="slds-assistive-text">success</span>
+                    <lightning-icon icon-name="utility:success" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                    <h2>Your Request Has Been Submitted!</h2>
                 </div>
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                    <p class="slds-m-bottom_small">
+                        <strong>Case Number:</strong> 
+                        <a href="javascript:void(0)" onclick={navigateToCaseRecord} data-id={caseId}>{caseNumber}</a>
+                    </p>
+                    <p>We will review your request shortly and contact you if additional information is needed.</p>
+                </div>
+                <lightning-button label="Submit Another Request" variant="neutral" onclick={handleReset}></lightning-button>
             </template>
 
-            <template if:false={isSubmitted}>
-                <lightning-record-edit-form
-                        object-api-name="Case"
-                        onsubmit={handleSubmit}
-                        onsuccess={handleSuccess}
-                        onerror={handleError}>
+            <!-- Form State -->
+            <template lwc:else>
+                <!-- Contact Information - Always visible -->
+                <h3 class="slds-section-title--divider slds-m-bottom_small">Contact Information</h3>
+                <div class="slds-grid slds-wrap slds-gutters_small">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <lightning-input
+                            type="text"
+                            label="Your Full Name"
+                            value={suppliedName}
+                            onchange={handleInputChange}
+                            data-field="suppliedName"
+                            required>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <lightning-input
+                            type="email"
+                            label="Business Email"
+                            value={suppliedEmail}
+                            onchange={handleInputChange}
+                            data-field="suppliedEmail"
+                            required>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <lightning-input
+                            type="tel"
+                            label="Contact Phone"
+                            value={suppliedPhone}
+                            onchange={handleInputChange}
+                            data-field="suppliedPhone">
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <lightning-combobox
+                            name="priority"
+                            label="Priority"
+                            value={priority}
+                            options={priorityOptions}
+                            onchange={handlePriorityChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
 
-                    <lightning-input-field field-name="Reason" value={predefinedReason} class="slds-hide"></lightning-input-field>
-                    <lightning-input-field field-name="Status" value="New" class="slds-hide"></lightning-input-field>
-
-                    <h3 class="slds-section-title--divider slds-m-top_medium">1. Contact Person Details</h3>
+                <!-- Business Information - For Registration types -->
+                <template lwc:if={showBusinessSection}>
+                    <h3 class="slds-section-title--divider slds-m-top_medium slds-m-bottom_small">Business Information</h3>
                     <div class="slds-grid slds-wrap slds-gutters_small">
-
                         <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                            <lightning-input-field field-name="SuppliedName" label="Your Full Name" required></lightning-input-field>
+                            <lightning-input
+                                type="text"
+                                label="Company Name"
+                                value={companyName}
+                                onchange={handleInputChange}
+                                data-field="companyName"
+                                required>
+                            </lightning-input>
                         </div>
                         <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                            <lightning-input-field field-name="SuppliedEmail" label="Business Email" required></lightning-input-field>
+                            <lightning-combobox
+                                name="businessType"
+                                label="Business Type"
+                                value={businessType}
+                                options={businessTypeOptions}
+                                onchange={handleBusinessTypeChange}
+                                required>
+                            </lightning-combobox>
                         </div>
                         <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                            <lightning-input-field field-name="SuppliedPhone" label="Contact Phone"></lightning-input-field>
+                            <lightning-input
+                                type="text"
+                                label="Tax ID"
+                                value={taxId}
+                                onchange={handleInputChange}
+                                data-field="taxId">
+                            </lightning-input>
                         </div>
-
                         <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                            <lightning-input-field field-name="Priority"></lightning-input-field>
+                            <lightning-input
+                                type="text"
+                                label="Company Registration Number"
+                                value={companyRegistrationNumber}
+                                onchange={handleInputChange}
+                                data-field="companyRegistrationNumber">
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-input
+                                type="url"
+                                label="Company Website"
+                                value={website}
+                                onchange={handleInputChange}
+                                data-field="website"
+                                placeholder="https://example.com">
+                            </lightning-input>
                         </div>
                     </div>
+                </template>
 
-                    <h3 class="slds-section-title--divider slds-m-top_medium">2. Business Account Details</h3>
+                <!-- Product Information - For New Product Approval -->
+                <template lwc:if={showProductSection}>
+                    <h3 class="slds-section-title--divider slds-m-top_medium slds-m-bottom_small">Product Information</h3>
                     <div class="slds-grid slds-wrap slds-gutters_small">
-
                         <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                            <lightning-input-field field-name="Subject" label="Company Name" required></lightning-input-field>
+                            <lightning-input
+                                type="text"
+                                label="Product Name"
+                                value={productName}
+                                onchange={handleInputChange}
+                                data-field="productName"
+                                required>
+                            </lightning-input>
                         </div>
-
                         <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                            <lightning-input-field field-name="Order__c" label="Tax ID / Registration Number (e.g., SSN/ITIN)"></lightning-input-field>
+                            <lightning-input
+                                type="text"
+                                label="Proposed Category"
+                                value={proposedCategory}
+                                onchange={handleInputChange}
+                                data-field="proposedCategory">
+                            </lightning-input>
                         </div>
-
                         <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                            <lightning-input-field field-name="WebCompany__c" label="Company Website (Optional)"></lightning-input-field>
+                            <lightning-input
+                                type="number"
+                                label="Proposed Price"
+                                value={proposedPrice}
+                                onchange={handleInputChange}
+                                data-field="proposedPrice"
+                                formatter="currency"
+                                step="0.01">
+                            </lightning-input>
                         </div>
+                    </div>
+                </template>
 
-                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                            <lightning-input-field field-name="Type" required></lightning-input-field>
-                        </div>
-
+                <!-- Order Reference - For Standard Inquiry -->
+                <template lwc:if={showOrderSection}>
+                    <h3 class="slds-section-title--divider slds-m-top_medium slds-m-bottom_small">Order Reference (Optional)</h3>
+                    <div class="slds-grid slds-wrap slds-gutters_small">
                         <div class="slds-col slds-size_1-of-1">
-                            <lightning-input-field field-name="Description" label="Reason for Wholesale Access (Describe your business)"></lightning-input-field>
-                        </div>
-
-                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-hide">
-                            <lightning-input-field field-name="Order__c"></lightning-input-field>
-                        </div>
-
-                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-hide">
-                            <lightning-input-field field-name="Group_Buy_Proposal__c"></lightning-input-field>
+                            <lightning-input
+                                type="text"
+                                label="Order Number (if applicable)"
+                                value={orderReference}
+                                onchange={handleInputChange}
+                                data-field="orderReference"
+                                placeholder="Enter order number if your inquiry is related to a specific order">
+                            </lightning-input>
                         </div>
                     </div>
+                </template>
 
-                    <div class="slds-m-top_large">
-                        <lightning-button
-                                variant="brand"
-                                type="submit"
-                                label="Submit Application"
-                                disabled={isSending}>
-                        </lightning-button>
-                        <template if:true={isSending}>
-                            <lightning-spinner alternative-text="Submitting" size="small" class="slds-m-left_small"></lightning-spinner>
-                        </template>
+                <!-- Request Details - Always visible -->
+                <h3 class="slds-section-title--divider slds-m-top_medium slds-m-bottom_small">Request Details</h3>
+                <div class="slds-grid slds-wrap slds-gutters_small">
+                    <!-- Sub Type -->
+                    <template lwc:if={hasSubTypes}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-combobox
+                                name="subType"
+                                label="Request Category"
+                                value={subType}
+                                options={subTypeOptions}
+                                onchange={handleSubTypeChange}
+                                required>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <div class="slds-col slds-size_1-of-1">
+                        <lightning-input
+                            type="text"
+                            label="Subject"
+                            value={subject}
+                            onchange={handleInputChange}
+                            data-field="subject"
+                            required
+                            maxlength="255">
+                        </lightning-input>
                     </div>
+                    <div class="slds-col slds-size_1-of-1">
+                        <lightning-textarea
+                            label="Description"
+                            value={description}
+                            onchange={handleInputChange}
+                            data-field="description"
+                            placeholder="Please describe your request in detail..."
+                            max-length="32000">
+                        </lightning-textarea>
+                    </div>
+                </div>
 
-                </lightning-record-edit-form>
+                <!-- Submit Button -->
+                <div class="slds-m-top_large">
+                    <lightning-button
+                        variant="brand"
+                        label="Submit Request"
+                        onclick={handleSubmit}
+                        disabled={isSubmitting}>
+                    </lightning-button>
+                    <template lwc:if={isSubmitting}>
+                        <lightning-spinner alternative-text="Submitting..." size="small" class="slds-m-left_small"></lightning-spinner>
+                    </template>
+                </div>
+
+                <!-- Error Message -->
+                <template lwc:if={errorMessage}>
+                    <div class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium" role="alert">
+                        <lightning-icon icon-name="utility:error" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                        <span>{errorMessage}</span>
+                    </div>
+                </template>
             </template>
         </div>
     </lightning-card>

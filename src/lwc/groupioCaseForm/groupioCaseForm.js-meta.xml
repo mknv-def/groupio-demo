@@ -12,17 +12,35 @@
     <targetConfigs>
         <targetConfig targets="lightningCommunity__Default, lightning__AppPage">
             <property
-                    name="predefinedReason"
-                    type="String"
-                    label="Predefined Case Reason"
-                    description="Set the fixed Case.Reason field value for this component placement (e.g., 'Merchandiser Application')."
-                    default="General Inquiry"
+                name="predefinedReason"
+                type="String"
+                label="Predefined Case Reason"
+                description="Determines case type and visible fields. Options: 'General Inquiry', 'Business Group Onboarding', 'Merchandiser Application', 'Proposal Approval Request'"
+                default="General Inquiry"
             />
             <property
-                    name="cardTitle"
-                    type="String"
-                    label="Card Title"
-                    default="New Service Request for Groupio"
+                name="cardTitle"
+                type="String"
+                label="Card Title"
+                default="Submit a Request"
+            />
+            <property
+                name="accountId"
+                type="String"
+                label="Account ID"
+                description="Optional: Pre-fill Account lookup"
+            />
+            <property
+                name="proposalId"
+                type="String"
+                label="Proposal ID"
+                description="Optional: Link to Group Buy Proposal (for Proposal Approval Request)"
+            />
+            <property
+                name="orderId"
+                type="String"
+                label="Order ID"
+                description="Optional: Link to Order (for Standard Inquiry)"
             />
         </targetConfig>
     </targetConfigs>

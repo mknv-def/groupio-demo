@@ -154,8 +154,16 @@
             <!-- Footer -->
             <footer class="slds-modal__footer">
                 <lightning-button label="Close" onclick={handleClose}></lightning-button>
+                <template lwc:if={canSubmitForApproval}>
+                    <lightning-button 
+                        label="Send for Approval" 
+                        variant="brand" 
+                        onclick={handleSubmitForApproval}
+                        disabled={isSubmitting}>
+                    </lightning-button>
+                </template>
                 <template lwc:if={canEdit}>
-                    <lightning-button label="Edit" variant="brand" onclick={handleEdit}></lightning-button>
+                    <lightning-button label="Edit" variant="neutral" onclick={handleEdit}></lightning-button>
                 </template>
             </footer>
         </div>
