@@ -26,7 +26,7 @@ public class ProposalStatusBatch implements Database.Batchable<sObject>, Databas
                    Is_Min_Quota_Reached__c, Product__r.Name,
                    Account__c, Account__r.Name,
                    (SELECT Id, Status__c, Quantity__c, Account__c 
-                    FROM Conditional_Orders__r 
+                    FROM Conditional_Order__r
                     WHERE Status__c = 'Pending')
             FROM Group_Buy_Proposal__c
             WHERE Status__c IN ('Approved', 'Active')
@@ -36,7 +36,6 @@ public class ProposalStatusBatch implements Database.Batchable<sObject>, Databas
     public void execute(Database.BatchableContext ctx, List<Group_Buy_Proposal__c> proposals) {
         List<Group_Buy_Proposal__c> proposalsToUpdate = new List<Group_Buy_Proposal__c>();
         List<Conditional_Order__c> ordersToConfirm = new List<Conditional_Order__c>();
-        List<Proposal_Status_Event__e> events = new List<Proposal_Status_Event__e>();
         
         DateTime now = DateTime.now();
         
@@ -50,10 +49,6 @@ public class ProposalStatusBatch implements Database.Batchable<sObject>, Databas
                 proposal.Activated_Date__c = now;
                 needsUpdate = true;
                 activatedCount++;
-                
-                // Create event for flow/notification
-                events.add(createEvent(proposal.Id, 'ACTIVATED', proposal.Name, 
-                    'Proposal is now active and accepting orders.'));
             }
             
             // CASE 2 & 3: Process active proposals past end date
@@ -70,7 +65,7 @@ public class ProposalStatusBatch implements Database.Batchable<sObject>, Databas
                     closedCount++;
                     
                     // Confirm all pending orders
-                    for (Conditional_Order__c order : proposal.Conditional_Orders__r) {
+                    for (Conditional_Order__c order : proposal.Conditional_Order__r) {
                         if (order.Status__c == 'Pending') {
                             order.Status__c = 'Confirmed';
                             order.Confirmed_Date__c = now;
@@ -79,22 +74,12 @@ public class ProposalStatusBatch implements Database.Batchable<sObject>, Databas
                         }
                     }
                     
-                    events.add(createEvent(proposal.Id, 'CLOSED', proposal.Name,
-                        'Proposal successfully closed. ' + proposal.Booked_Quota__c + ' units ordered.'));
-                    
                 } else {
                     // EXPIRE - Min quota not reached
                     proposal.Status__c = 'Expired';
                     proposal.Closed_Date__c = now;
                     needsUpdate = true;
                     expiredCount++;
-                    
-                    // Note: Orders remain as Pending - they should be cancelled
-                    // This could be handled by a flow or additional logic
-                    
-                    events.add(createEvent(proposal.Id, 'EXPIRED', proposal.Name,
-                        'Proposal expired without reaching minimum quota. ' + 
-                        proposal.Booked_Quota__c + '/' + proposal.Min_Quota__c + ' units.'));
                 }
             }
             
@@ -111,11 +96,6 @@ public class ProposalStatusBatch implements Database.Batchable<sObject>, Databas
             
             if (!ordersToConfirm.isEmpty()) {
                 update ordersToConfirm;
-            }
-            
-            // Publish platform events for flow-based notifications
-            if (!events.isEmpty()) {
-                EventBus.publish(events);
             }
             
         } catch (Exception e) {
@@ -139,20 +119,6 @@ public class ProposalStatusBatch implements Database.Batchable<sObject>, Databas
         if (activatedCount > 0 || closedCount > 0 || expiredCount > 0) {
             sendSummaryEmail();
         }
-    }
-    
-    /**
-     * Create a platform event for flow processing
-     */
-    private Proposal_Status_Event__e createEvent(Id proposalId, String eventType, 
-                                                   String proposalName, String message) {
-        return new Proposal_Status_Event__e(
-            Proposal_Id__c = proposalId,
-            Event_Type__c = eventType,
-            Proposal_Name__c = proposalName,
-            Message__c = message,
-            Event_Time__c = DateTime.now()
-        );
     }
     
     /**
